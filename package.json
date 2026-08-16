@@ -1,9 +1,14 @@
 {
-  "name": "@dsh-plugins/conversation-language",
+  "name": "dsh-conversation-language",
   "version": "1.0.0",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
   "main": "./src/index.ts",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.yml"
+    }
+  },
   "exports": {
     ".": "./src/index.ts"
   },
