@@ -1,0 +1,5 @@
+# 对话语言切换插件配置
+# 安装方式: dsh plugin --profile web add <path-to-plugin>
+- insert:
+    - id: tool-conversation-language
+      name: '@dsh-plugins/conversation-language'
