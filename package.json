@@ -6,7 +6,7 @@
   "main": "./src/index.ts",
   "dsh": {
     "bundle": {
-      "patch": "./cordis.yml"
+      "patch": "./cordis.patch.yml"
     }
   },
   "exports": {

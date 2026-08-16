@@ -2,4 +2,4 @@
 # 安装方式: dsh plugin --profile web add <path-to-plugin>
 - insert:
     - id: tool-conversation-language
-      name: '@dsh-plugins/conversation-language'
+      name: 'dsh-conversation-language'
