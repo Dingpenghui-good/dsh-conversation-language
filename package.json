@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
-  "main": "./lib/index.mjs",
+  "main": "./lib/index.js",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": ["slots", "locale"],
+      "platform": "web",
+      "immediately": true
     }
   },
   "exports": {
-    ".": "./lib/index.mjs",
-    "./client": "./lib/client/index.mjs"
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js"
   },
   "scripts": {
     "build": "tsdown",
@@ -31,7 +36,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@tsdown/css": "^0.22.14",
+    "lightningcss": "^1.29.2",
     "tsdown": "^0.22.14"
   }
 }
