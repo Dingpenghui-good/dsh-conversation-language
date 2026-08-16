@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./lib/index.mjs",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./client": "./src/client/index.ts"
+    ".": "./lib/index.mjs",
+    "./client": "./lib/client/index.mjs"
   },
   "scripts": {
     "build": "tsdown",
@@ -19,15 +19,19 @@
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-settings": "^0.1.0-rc.5",
     "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.5",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.5",
     "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-settings": "^0.1.0-rc.5",
     "@deepseek-ai/schemastery": "^3.18.1",
     "react": "^18.2.0"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@tsdown/css": "^0.22.14",
+    "tsdown": "^0.22.14"
+  }
 }

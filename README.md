@@ -105,6 +105,7 @@ dsh-conversation-language/
 │   │   └── settings-store.ts       # 状态管理
 │   └── locales/
 │       └── index.ts                # 国际化字典
+├── lib/                            # 构建产物（npm run build 生成）
 ├── cordis.patch.yml                # Cordis 配置
 ├── package.json
 └── README.md
@@ -114,9 +115,11 @@ dsh-conversation-language/
 
 ```bash
 cd dsh-conversation-language
-npm install
-npm run build
+npm install   # 安装依赖（含 tsdown + @tsdown/css）
+npm run build # 构建产物到 lib/
 ```
+
+> ⚠️ 必须执行 `npm run build`，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
 
 ## 相关项目
 
