@@ -1,43 +1,37 @@
-# dsh-tool-language
+﻿# dsh-conversation-language
 
 DSH 插件：对话语言切换器
 
 ## 功能
 
-允许在中文和英文之间切换对话语言。
+允许在中文和英文之间切换对话语言。切换后 AI 将使用对应语言回复。
 
 ## 安装
 
-```bash
-cd dsh-tool-language
-npm install
-```
+`ash
+# 添加到 DSH preset
+# 在 agent.cordis.yml 中添加:
+- id: tool-conversation-language
+  name: '@dsh-plugins/conversation-language'
+`
 
-## 在 DSH 中使用
+## 配置
 
-添加到 `agent.cordis.yml`：
+在 settings.yaml 中添加:
 
-```yaml
-- id: tool-language-switcher
-  name: '@dsh-plugins/language-switcher'
-```
-
-## 设置
-
-在 settings.yaml 中添加：
-
-```yaml
+`yaml
 conversation-language:
   conversationLanguage: zh  # 或 en
-```
+`
 
-或通过 UI 设置（待实现）。
+## 设置界面
 
-## API
+在 DSH 设置 → 通用设置 中可以看到「对话内容语言」选项。
 
-### 工具
+## 标签
 
-- `get_conversation_language` - 获取当前对话语言
+- dsh
+- dsh-plugin
 
 ## License
 
