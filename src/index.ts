@@ -17,7 +17,7 @@ const CONVERSATION_LANGUAGE_NAMESPACE = 'conversation-language'
 
 // Schema
 const ConversationLanguageSchema = z.object({
-  conversationLanguage: z.enum(['zh', 'en']).optional(),
+  conversationLanguage: z.union(['zh', 'en']).required(false),
 })
 
 // Persona templates
@@ -74,7 +74,7 @@ Critical:
 - Do not provide more than one logical explanation for the same content. If content cannot be generated, retain only the structural fields and give a single brief explanation; do not repeat or re-explain the reason.`
 
 export const name = 'conversation-language'
-export const inject = ['settings'] as const
+export const inject = ['settings', 'systemPrompt', 'tools'] as const
 
 export function apply(ctx: Context): void {
   // Register settings namespace
@@ -101,39 +101,40 @@ export function apply(ctx: Context): void {
   }
   
   ctx.provide('conversationLanguage', languageService)
-
-  // Override persona based on language
-  const updatePersona = () => {
-    const lang = languageService.getLanguage()
-    const persona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
-    ctx.systemPrompt.override({
-      id: 'conversation-language-persona',
-      section: `--- 对话语言设置 (${lang === 'zh' ? '中文' : 'English'}) ---\n${persona}\n--- 结束 ---`,
-      priority: 100,
-    })
-  }
-  
-  // Initial persona set
-  updatePersona()
-
-  // Register tool to check current language
-  ctx.tools.register({
-    name: 'get_conversation_language',
-    description: '获取当前对话语言设置',
-    inputSchema: z.object({}),
-    execute: async () => {
+  // 使用 ctx.inject 确保 systemPrompt 服务就绪后再操作
+  ctx.inject(['systemPrompt'], (ctx) => {
+    const updatePersona = () => {
       const lang = languageService.getLanguage()
-      return { 
-        language: lang, 
-        label: lang === 'zh' ? '中文' : 'English' 
-      }
-    },
+      const persona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
+      ctx.systemPrompt.override({
+        id: 'conversation-language-persona',
+        section: `--- 对话语言设置 (${lang === 'zh' ? '中文' : 'English'}) ---\n${persona}\n--- 结束 ---`,
+        priority: 100,
+      })
+    }
+
+    // Initial persona set
+    updatePersona()
+
+    // Listen for settings changes to update persona
+    if (settings) {
+      settings.onChange(CONVERSATION_LANGUAGE_NAMESPACE, updatePersona)
+    }
   })
-
-  // Listen for settings changes to update persona
-  if (settings) {
-    settings.onChange(CONVERSATION_LANGUAGE_NAMESPACE, updatePersona)
-  }
+  // Register tool to check current language
+  ctx.inject(['tools'], (ctx) => {
+    ctx.tools.register({
+      name: 'get_conversation_language',
+      description: '获取当前对话语言设置',
+      inputSchema: z.object({}),
+      execute: async () => {
+        const lang = languageService.getLanguage()
+        return {
+          language: lang,
+          label: lang === 'zh' ? '中文' : 'English'
+        }
+      },
+    })
+  })
 }
-
 export default apply

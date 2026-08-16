@@ -14,8 +14,9 @@ DSH 插件：对话语言切换器
 # 从 GitHub 克隆安装
 dsh plugin --profile web add https://github.com/Dingpenghui-good/dsh-conversation-language
 
-# 或从本地路径安装
-dsh plugin --profile web add /path/to/dsh-conversation-language
+# 或从本地路径安装（需要先 cd 到插件目录）
+cd /path/to/dsh-conversation-language
+dsh plugin --profile web add .
 ```
 
 ### 方式二：手动添加到 cordis.patch.yml
@@ -23,10 +24,13 @@ dsh plugin --profile web add /path/to/dsh-conversation-language
 编辑 `~/.dsh/profiles/web/cordis.patch.yml`，添加：
 
 ```yaml
+# 对话语言切换插件
 - insert:
     - id: tool-conversation-language
-      name: '/path/to/dsh-conversation-language/src/index.ts'
+      name: 'dsh-conversation-language'
 ```
+
+**注意**：确保插件已安装到 `~/.dsh/plugins/dsh-conversation-language/` 目录。
 
 ## 配置
 
