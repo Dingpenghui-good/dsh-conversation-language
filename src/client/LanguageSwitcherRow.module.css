@@ -1,53 +1,57 @@
-/** CSS modules for LanguageSwitcherRow */
+/* Language switcher row (matches LanguageRow.module.css from locale plugin) */
 
 .row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--dsh-border);
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
 }
 
 .rowText {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding-right: 48px;
 }
 
 .title {
   font-size: 14px;
-  font-weight: 500;
-  color: var(--dsh-text-primary);
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
 }
 
 .hint {
   font-size: 12px;
-  color: var(--dsh-text-secondary);
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
 }
 
+/* Selector pill (figma 'Selector': h36 r18, fill #F5F6F7, pad 0/14, gap 12). */
 .selector {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--dsh-border);
-  border-radius: 6px;
-  background: var(--dsh-bg-secondary);
-  color: var(--dsh-text-primary);
-  font-size: 13px;
+  gap: 12px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 18px;
+  background: var(--dsw-alias-bg-module-platform);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .selector:hover {
-  background: var(--dsh-bg-tertiary);
-  border-color: var(--dsh-accent);
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 .chevron {
-  transition: transform 0.2s;
-}
-
-.selector[aria-expanded="true"] .chevron {
-  transform: rotate(180deg);
+  flex: none;
 }
