@@ -1,0 +1,53 @@
+/** CSS modules for LanguageSwitcherRow */
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--dsh-border);
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dsh-text-primary);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--dsh-text-secondary);
+}
+
+.selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 6px;
+  background: var(--dsh-bg-secondary);
+  color: var(--dsh-text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.selector:hover {
+  background: var(--dsh-bg-tertiary);
+  border-color: var(--dsh-accent);
+}
+
+.chevron {
+  transition: transform 0.2s;
+}
+
+.selector[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
