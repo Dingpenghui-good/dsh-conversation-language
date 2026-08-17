@@ -16,7 +16,8 @@
   },
   "exports": {
     ".": "./lib/index.js",
-    "./client": "./lib/client.js"
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsdown",
