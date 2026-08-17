@@ -60,13 +60,13 @@ export function apply(ctx: ClientContext): void {
     inject: (actions: BoundActions<typeof store>) => {
       bound = actions
       // Read initial language from host settings scope
-      const data = host?.get()
+      const data = host.getSnapshot().value
       const initialLang = data?.conversationLanguage ?? 'zh'
       syncStore(initialLang)
 
       return {
         setConversationLanguage: (lang: 'zh' | 'en') => {
-          host?.set({ conversationLanguage: lang })
+          host.set('conversationLanguage', lang)
           syncStore(lang)
         },
       }
