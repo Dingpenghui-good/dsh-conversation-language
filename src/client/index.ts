@@ -21,7 +21,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-export const inject = [] as const
+export const inject = ['slots', 'locale', 'settingsScope'] as const
 
 export function apply(ctx: ClientContext): void {
   // Get locale and settingsScope via ctx.get() to avoid host-side inject checks
