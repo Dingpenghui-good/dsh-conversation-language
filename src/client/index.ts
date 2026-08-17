@@ -21,16 +21,21 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-export const inject = ['slots', 'locale', 'settingsScope'] as const
+export const inject = [] as const
 
 export function apply(ctx: ClientContext): void {
+  // Get locale and settingsScope via ctx.get() to avoid host-side inject checks
+  const slots = ctx.get('slots')
+  const locale = ctx.get('locale')
+  const settingsScope = ctx.get('settingsScope')
+
   // Register locale dictionaries
-  if ('register' in ctx.locale) {
-    ctx.locale.register('settings.conversation-language', { zh: zhDict, en: enDict })
+  if (locale && 'register' in locale) {
+    locale.register('settings.conversation-language', { zh: zhDict, en: enDict })
   }
 
   // Bind to host settings namespace via settingsScope
-  const host = ctx.settingsScope.bind<{ conversationLanguage?: 'zh' | 'en' }>({
+  const host = settingsScope?.bind<{ conversationLanguage?: 'zh' | 'en' }>({
     namespace: 'conversation-language',
   })
 
@@ -46,7 +51,7 @@ export function apply(ctx: ClientContext): void {
     bound?.sync(active, options, 1)
   }
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
+  slots.inject('settings.general.item', () => slots.register({
     name: 'settings.general.item',
     id: 'conversation-language',
     order: 1,
@@ -55,13 +60,13 @@ export function apply(ctx: ClientContext): void {
     inject: (actions: BoundActions<typeof store>) => {
       bound = actions
       // Read initial language from host settings scope
-      const data = host.get()
+      const data = host?.get()
       const initialLang = data?.conversationLanguage ?? 'zh'
       syncStore(initialLang)
 
       return {
         setConversationLanguage: (lang: 'zh' | 'en') => {
-          host.set({ conversationLanguage: lang })
+          host?.set({ conversationLanguage: lang })
           syncStore(lang)
         },
       }
