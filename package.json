@@ -9,7 +9,7 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "inject": ["slots", "locale"],
+      "inject": ["@deepseek-ai/dsh-client-ui-slots", "@deepseek-ai/dsh-client-locale"],
       "platform": "web",
       "immediately": true
     }
