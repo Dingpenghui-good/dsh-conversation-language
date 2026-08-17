@@ -21,7 +21,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-export const inject = ['slots', '@deepseek-ai/dsh-client-locale', '@deepseek-ai/dsh-client-runtime'] as const
+export const inject = ['slots', 'locale', 'settingsScope'] as const
 
 export function apply(ctx: ClientContext): void {
   // Register locale dictionaries
