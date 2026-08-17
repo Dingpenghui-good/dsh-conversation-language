@@ -3,5 +3,3 @@
 - insert:
     - id: tool-conversation-language
       name: 'dsh-conversation-language'
-    - id: client-conversation-language
-      name: 'dsh-conversation-language/client'
