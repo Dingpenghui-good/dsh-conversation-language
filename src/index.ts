@@ -97,6 +97,9 @@ export function apply(ctx: Context): void {
   }
   ctx.provide('conversationLanguage', languageService)
 
+  // Track current persona to avoid redundant section updates
+  let currentPersona: typeof PERSONA_ZH | typeof PERSONA_EN = PERSONA_ZH
+
   // Register a dynamic persona section at order -1, between harness identity (-100)
   // and the default deployment persona (0). Use `complete: true` to replace the
   // entire system prompt with our language-specific persona, ensuring the model
@@ -105,12 +108,18 @@ export function apply(ctx: Context): void {
     name: 'conversation-language-persona',
     order: -1,
     complete: true,
-    text: () => {
-      const lang = languageService.getLanguage()
-      const persona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
-      return persona
-    },
+    text: () => currentPersona,
   })
+
+  // Watch for language changes and update the persona immediately
+  scope?.watch((next) => {
+    const lang = next.conversationLanguage ?? 'zh'
+    currentPersona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
+  })
+
+  // Also set initial persona from current settings
+  const initialLang = scope?.get()?.conversationLanguage ?? 'zh'
+  currentPersona = initialLang === 'en' ? PERSONA_EN : PERSONA_ZH
 
   // Register tool to query the current language
   ctx.tools.register(defineTool({
