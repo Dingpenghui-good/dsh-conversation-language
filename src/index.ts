@@ -78,53 +78,27 @@ export const name = 'conversation-language'
 export const inject = ['settings', 'systemPrompt', 'tools'] as const
 
 export function apply(ctx: Context): void {
-  // Register settings namespace and capture the typed scope.
+  // Register settings namespace
   const settings = ctx.get('settings')
   const scope = settings?.register(
     settingsNamespace(CONVERSATION_LANGUAGE_NAMESPACE),
     ConversationLanguageSchema,
   )
 
-  // Provide language service (other plugins can consume via ctx.conversationLanguage)
-  const languageService = {
-    getLanguage(): 'zh' | 'en' {
-      return scope?.get()?.conversationLanguage ?? 'zh'
-    },
-    setLanguage(lang: 'zh' | 'en') {
-      scope?.update({ conversationLanguage: lang })
-    },
-  }
-  ctx.provide('conversationLanguage', languageService)
-
-  // CRITICAL: Use a reactive object to ensure the text function always reads
-  // the latest value. This avoids closure staleness issues where the text
-  // function might capture an outdated variable reference.
-  const personaState = {
-    zh: PERSONA_ZH,
-    en: PERSONA_EN,
-    get current() {
-      return this[scope?.get()?.conversationLanguage ?? 'zh']
-    }
+  // Get current language from settings (read-only, no caching)
+  const getLanguage = (): 'zh' | 'en' => {
+    return scope?.get()?.conversationLanguage ?? 'zh'
   }
 
-  // Register a dynamic persona section at order -1, between harness identity (-100)
-  // and the default deployment persona (0). Use `complete: true` to replace the
-  // entire system prompt with our language-specific persona.
+  // Register persona section at order -1
   ctx.systemPrompt.section({
     name: 'conversation-language-persona',
     order: -1,
     complete: true,
-    text: () => personaState.current,
-  })
-
-  // Watch for language changes and update the persona immediately
-  scope?.watch((next) => {
-    // Force re-evaluation by triggering a state change
-    const lang = next.conversationLanguage ?? 'zh'
-    Object.defineProperty(personaState, 'current', {
-      get: () => lang === 'en' ? PERSONA_EN : PERSONA_ZH,
-      configurable: true
-    })
+    text: () => {
+      const lang = getLanguage()
+      return lang === 'en' ? PERSONA_EN : PERSONA_ZH
+    },
   })
 
   // Register tool to query the current language
@@ -147,8 +121,8 @@ export function apply(ctx: Context): void {
       }],
     },
     execute: async () => ({
-      language: languageService.getLanguage(),
-      label: languageService.getLanguage() === 'zh' ? '中文' : 'English',
+      language: getLanguage(),
+      label: getLanguage() === 'zh' ? '中文' : 'English',
     }),
   }))
 }
