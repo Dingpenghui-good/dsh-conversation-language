@@ -10,6 +10,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import { defineTool } from '@deepseek-ai/dsh-tools'
 import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 
 // Settings namespace
@@ -110,14 +111,28 @@ export function apply(ctx: Context): void {
   })
 
   // Register tool to query the current language
-  ctx.tools.register({
+  ctx.tools.register(defineTool({
     name: 'get_conversation_language',
     description: '获取当前对话语言设置',
-    inputSchema: z.object({}),
+    parameters: {},
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          language: { oneOf: [{ const: 'zh' }, { const: 'en' }] },
+          label: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: `当前对话语言：${value.label} (${value.language})`,
+      }],
+    },
     execute: async () => ({
       language: languageService.getLanguage(),
       label: languageService.getLanguage() === 'zh' ? '中文' : 'English',
     }),
-  })
+  }))
 }
 
