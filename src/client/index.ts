@@ -74,4 +74,4 @@ export function apply(ctx: ClientContext): void {
   }, LanguageSwitcherRow))
 }
 
-export default apply
+

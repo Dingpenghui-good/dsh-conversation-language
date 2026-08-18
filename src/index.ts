@@ -120,4 +120,4 @@ export function apply(ctx: Context): void {
     }),
   })
 }
-export default apply
+
