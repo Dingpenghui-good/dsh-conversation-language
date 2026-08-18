@@ -100,9 +100,12 @@ export function apply(ctx: Context): void {
   // Register a dynamic persona section.
   // The text is a function evaluated lazily at each prompt assembly,
   // so it always reads the current language without needing watchers/disposers.
+  // Use `complete: true` to replace the entire system prompt with our persona,
+  // ensuring the model follows our language instructions for both thinking and reply.
   ctx.systemPrompt.section({
     name: 'conversation-language-persona',
     order: 100,
+    complete: true,
     text: () => {
       const lang = languageService.getLanguage()
       const persona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
