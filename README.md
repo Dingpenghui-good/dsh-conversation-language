@@ -4,12 +4,12 @@ DSH 插件：对话语言切换器
 
 ## 功能
 
-允许在中文和英文之间切换对话语言。切换后 AI 将使用对应语言回复。
+允许在中文和英文之间切换对话语言。切换后 AI 将使用对应语言进行思考和回复。
 
 ### 特性
 
 - 🌐 在设置界面中直接切换语言
-- 🔄 动态更新 Persona（系统提示）
+- 🔄 动态更新 Persona（系统提示），无需重启即可生效
 - 💾 设置持久化到 `settings.yaml`
 - 🎨 匹配 DSH 原生设置界面样式
 
@@ -20,7 +20,7 @@ DSH 插件：对话语言切换器
 ### 方式一：使用 dsh 命令（推荐）
 
 ```bash
-# 从本地路径安装（先 cd 到插件目录）
+# 先 cd 到插件目录
 cd /path/to/dsh-conversation-language
 dsh plugin --profile web add .
 ```
@@ -77,7 +77,7 @@ conversation-language:
 
 ## 使用
 
-切换语言后，AI 将自动以对应语言回复。也可通过 `get_conversation_language` Tool 查询当前设置。
+切换语言后，AI 将自动以对应语言进行思考和回复。也可通过 `get_conversation_language` Tool 查询当前设置。
 
 ## 技术说明
 
@@ -87,6 +87,7 @@ conversation-language:
 | Schema | `{ conversationLanguage?: 'zh' \| 'en' }` |
 | 默认值 | `zh` (中文) |
 | Persona Override | 根据语言设置动态更新系统提示 |
+| Tool 注册 | `get_conversation_language` — 查询当前语言设置 |
 
 ### 插件结构
 
@@ -116,11 +117,6 @@ npm run build   # 构建产物到 lib/；安装前必须执行此步
 ```
 
 > ⚠️ **必须执行 `npm run build`**，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
-
-## 相关项目
-
-- [dsh-tool-agnes](https://github.com/Dingpenghui-good/dsh-tool-agnes) - Agnes AI 媒体生成插件
-- [dsh-plugin-manager](https://github.com/Dingpenghui-good/dsh-plugin-manager) - 插件管理 UI
 
 ## License
 
