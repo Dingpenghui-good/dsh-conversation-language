@@ -91,13 +91,17 @@ export function apply(ctx: Context): void {
   }
 
   // Register persona section at order -1
+  // This replaces the entire system prompt with our language-specific persona
   ctx.systemPrompt.section({
     name: 'conversation-language-persona',
     order: -1,
     complete: true,
     text: () => {
-      const lang = getLanguage()
-      return lang === 'en' ? PERSONA_EN : PERSONA_ZH
+      const lang = scope?.get()?.conversationLanguage ?? 'zh'
+      const persona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
+      // Debug: log to ensure text function is called with correct value
+      console.log(`[conversation-language] Prompt assembled, language=${lang}, using ${lang === 'en' ? 'EN' : 'ZH'} persona`)
+      return persona
     },
   })
 
