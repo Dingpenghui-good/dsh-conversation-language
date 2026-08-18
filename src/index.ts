@@ -130,25 +130,44 @@ ${basePersona}`
   })
 
   // Runtime context - 每次 prompt assembly 时注入
+  // 使用更强的指令和更具体的示例
   ctx.systemPrompt.context({
     name: 'conversation-language-context',
     order: 0,
     text: () => {
       const lang = getLanguage()
       if (lang === 'zh') {
-        return `【当前对话语言设置】
-- 对话语言：中文
-- 你应该用中文进行思考（包括内部推理、分析、验证等所有思维过程）
-- 你应该用中文进行回复
-- 如果思考过程中意外使用了英文，请立即纠正回中文
-- 示例：当用户重复提问时，你应该想"用户又在重复提问了"而不是 "The user is repeatedly asking..."`
+        return `【语言设置 - 强制执行】
+当前对话语言：中文
+你必须使用中文进行思考。这不是建议，是必须遵守的规则。
+
+正确示例：
+- 用户重复提问时，想："用户又在重复提问了，我应该继续回答"
+- 分析问题时，想："这个问题需要我检查..."
+- 总结对话时，想："已经回答了多次，应该简洁回复"
+
+错误示例（禁止使用）：
+- "The user is asking again" ← 这是英文，禁止！
+- "Let me provide..." ← 这是英文，禁止！
+- "I've answered this multiple times" ← 这是英文，禁止！
+
+如果你发现自己用了英文思考，立即纠正："等等，我应该用中文思考。"`
       } else {
-        return `【Current Conversation Language Setting】
-- Conversation Language: English
-- You should think in English (including all internal reasoning, analysis, verification processes)
-- You should reply in English
-- If you accidentally think in another language, immediately correct back to English
-- Example: When user repeats a question, you should think "The user is asking again" not "用户又在重复提问了"`
+        return `[Language Setting - Mandatory]
+Current conversation language: English
+You MUST think in English. This is not a suggestion, it's a required rule.
+
+Correct examples:
+- When user repeats: "The user is asking again, I should answer"
+- When analyzing: "This problem requires me to check..."
+- When summarizing: "I've answered multiple times, should be brief"
+
+Wrong examples (PROHIBITED):
+- "用户又在重复提问了" ← This is Chinese, PROHIBITED!
+- "这个问题需要我检查" ← This is Chinese, PROHIBITED!
+- "已经回答了多次" ← This is Chinese, PROHIBITED!
+
+If you catch yourself thinking in another language, immediately correct: "Wait, I should think in English."`
       }
     },
   })
