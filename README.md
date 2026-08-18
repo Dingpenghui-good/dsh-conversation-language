@@ -15,13 +15,12 @@ DSH 插件：对话语言切换器
 
 ## 安装
 
+> ⚠️ **安装完成后必须重启 DeepSeek Harness**，插件才能生效。
+
 ### 方式一：使用 dsh 命令（推荐）
 
 ```bash
-# 从 GitHub 克隆安装
-dsh plugin --profile web add https://github.com/Dingpenghui-good/dsh-conversation-language
-
-# 或从本地路径安装（需要先 cd 到插件目录）
+# 从本地路径安装（先 cd 到插件目录）
 cd /path/to/dsh-conversation-language
 dsh plugin --profile web add .
 ```
@@ -31,6 +30,7 @@ dsh plugin --profile web add .
 1. 克隆插件到 plugins 目录：
 ```bash
 git clone https://github.com/Dingpenghui-good/dsh-conversation-language.git ~/.dsh/plugins/dsh-conversation-language
+# Windows: git clone https://github.com/Dingpenghui-good/dsh-conversation-language.git %USERPROFILE%\.dsh\plugins\dsh-conversation-language
 ```
 
 2. 添加到 `~/.dsh/profiles/web/package.json`：
@@ -56,6 +56,8 @@ cd ~/.dsh/profiles/web
 pnpm install
 ```
 
+4. **重启 DeepSeek Harness**。
+
 ## 配置
 
 ### 方式一：通过设置界面
@@ -64,7 +66,7 @@ pnpm install
 
 ### 方式二：直接修改 settings.yaml
 
-编辑 `~/.dsh/settings.yaml`：
+编辑 `~/.dsh/settings.yaml`（Windows：`%USERPROFILE%\.dsh\settings.yaml`）：
 
 ```yaml
 conversation-language:
@@ -75,13 +77,7 @@ conversation-language:
 
 ## 使用
 
-### 通过命令
-
-```
-切换到英文模式
-```
-
-或直接修改 `settings.yaml` 中的 `conversationLanguage` 值。
+切换语言后，AI 将自动以对应语言回复。也可通过 `get_conversation_language` Tool 查询当前设置。
 
 ## 技术说明
 
@@ -97,7 +93,7 @@ conversation-language:
 ```
 dsh-conversation-language/
 ├── src/
-│   ├── index.ts                    # Host 层：settings + persona
+│   ├── index.ts                    # Host 层：settings + persona + tool
 │   ├── client/
 │   │   ├── index.ts                # Client 层：UI 注册
 │   │   ├── LanguageSwitcherRow.tsx # React 组件
@@ -105,8 +101,8 @@ dsh-conversation-language/
 │   │   └── settings-store.ts       # 状态管理
 │   └── locales/
 │       └── index.ts                # 国际化字典
-├── lib/                            # 构建产物（npm run build 生成）
-├── cordis.patch.yml                # Cordis 配置
+├── lib/                            # 构建产物（npm run build 生成，安装时必须存在）
+├── cordis.patch.yml                # Cordis 静态插件配置
 ├── package.json
 └── README.md
 ```
@@ -115,21 +111,16 @@ dsh-conversation-language/
 
 ```bash
 cd dsh-conversation-language
-npm install   # 安装依赖（含 tsdown + @tsdown/css）
-npm run build # 构建产物到 lib/
+npm install
+npm run build   # 构建产物到 lib/；安装前必须执行此步
 ```
 
-> ⚠️ 必须执行 `npm run build`，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
+> ⚠️ **必须执行 `npm run build`**，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
 
 ## 相关项目
 
 - [dsh-tool-agnes](https://github.com/Dingpenghui-good/dsh-tool-agnes) - Agnes AI 媒体生成插件
 - [dsh-plugin-manager](https://github.com/Dingpenghui-good/dsh-plugin-manager) - 插件管理 UI
-
-## 标签
-
-- dsh
-- dsh-plugin
 
 ## License
 

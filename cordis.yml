@@ -1,3 +1,3 @@
-# 对话语言切换插件配置
+# 对话语言切换插件配置（静态插件）
 - id: tool-conversation-language
-  name: './src/index.ts'
+  name: './lib/index.js'

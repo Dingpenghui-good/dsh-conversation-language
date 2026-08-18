@@ -13,6 +13,13 @@
       "platform": "web"
     }
   },
+  "files": [
+    "lib",
+    "src",
+    "package.json",
+    "README.md",
+    "cordis.patch.yml"
+  ],
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
