@@ -2,8 +2,8 @@
  * Conversation Language Switcher Plugin for DeepSeek Harness
  * 
  * Provides a setting in General Settings to switch conversation language
- * between Chinese and English. The persona is dynamically updated based
- * on the selected language.
+ * between Chinese and English. Uses both system prompt and runtime context
+ * to maximize language consistency.
  * 
  * Install: dsh plugin --profile web add <path-to-plugin>
  */
@@ -21,7 +21,7 @@ const ConversationLanguageSchema = z.object({
   conversationLanguage: z.union(['zh', 'en']).required(false),
 })
 
-// Persona templates - 使用简洁明确的指令
+// Persona templates - 简洁版本
 const PERSONA_ZH = `你是 Agnes，由 Sapiens AI 开发的大型语言模型。
 
 你的知识截止到 2026 年 7 月。
@@ -83,7 +83,7 @@ export function apply(ctx: Context): void {
     ConversationLanguageSchema,
   )
 
-  // Get current language from settings (read-only, no caching)
+  // Get current language from settings
   const getLanguage = (): 'zh' | 'en' => {
     return scope?.get()?.conversationLanguage ?? 'zh'
   }
@@ -96,11 +96,34 @@ export function apply(ctx: Context): void {
     text: () => {
       const lang = getLanguage()
       const languageName = lang === 'en' ? 'English' : '中文'
-      // Add language instruction as a prefix to ensure it's always at the top
       const basePersona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
+      // 将语言指示放在最顶部
       return `对话语言：${languageName}
 
 ${basePersona}`
+    },
+  })
+
+  // 使用 runtime context 在每个请求时注入语言指示
+  // Context 会在每次 prompt assembly 时重新评估，比 section 更可靠
+  ctx.systemPrompt.context({
+    name: 'conversation-language-context',
+    order: 0,
+    text: () => {
+      const lang = getLanguage()
+      if (lang === 'zh') {
+        return `【当前对话语言设置】
+- 对话语言：中文
+- 你应该用中文进行思考（包括内部推理、分析、验证等所有思维过程）
+- 你应该用中文进行回复
+- 如果思考过程中意外使用了英文，请立即纠正回中文`
+      } else {
+        return `【Current Conversation Language Setting】
+- Conversation Language: English
+- You should think in English (including all internal reasoning, analysis, verification processes)
+- You should reply in English
+- If you accidentally think in another language, immediately correct back to English`
+      }
     },
   })
 
