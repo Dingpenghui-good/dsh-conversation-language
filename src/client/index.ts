@@ -60,7 +60,6 @@ export function apply(ctx: ClientContext): void {
   // sources (e.g. direct settings.yaml edit, another plugin).
   ctx.effect(() => {
     const dispose = host?.subscribe(syncStore) ?? (() => {})
-    syncStore() // initial sync
     return dispose
   }, 'conversation-language: settings sync')
 
@@ -72,11 +71,13 @@ export function apply(ctx: ClientContext): void {
     locale: 'settings.conversation-language',
     inject: (actions: BoundActions<typeof store>) => {
       bound = actions
+      // Sync immediately after bound is set — matches dsh-client-locale pattern.
+      syncStore()
       return {
         setConversationLanguage: (lang: 'zh' | 'en') => {
           host?.set('conversationLanguage', lang)
-          // Optimistically update the UI immediately; the host subscribe will
-          // confirm the write and bump the revision if it succeeds.
+          // Optimistically update the UI; the host subscribe will confirm
+          // the write and bump the revision if it succeeds.
           syncStore()
         },
       }
