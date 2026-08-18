@@ -97,19 +97,18 @@ export function apply(ctx: Context): void {
   }
   ctx.provide('conversationLanguage', languageService)
 
-  // Register a dynamic persona section.
-  // The text is a function evaluated lazily at each prompt assembly,
-  // so it always reads the current language without needing watchers/disposers.
-  // Use `complete: true` to replace the entire system prompt with our persona,
-  // ensuring the model follows our language instructions for both thinking and reply.
+  // Register a dynamic persona section at order -1, between harness identity (-100)
+  // and the default deployment persona (0). This ensures our language instruction
+  // is always present in the system prompt and takes precedence over the default.
+  // No `complete: true` — we supplement rather than replace, avoiding race conditions
+  // where the first prompt assembly happens before plugin initialization completes.
   ctx.systemPrompt.section({
     name: 'conversation-language-persona',
-    order: 100,
-    complete: true,
+    order: -1,
     text: () => {
       const lang = languageService.getLanguage()
       const persona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
-      return `--- 对话语言设置 (${lang === 'zh' ? '中文' : 'English'}) ---\n${persona}\n--- 结束 ---`
+      return persona
     },
   })
 
