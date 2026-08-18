@@ -79,7 +79,6 @@ export const inject = ['settings', 'systemPrompt', 'tools'] as const
 
 export function apply(ctx: Context): void {
   // Register settings namespace and capture the typed scope.
-  // register() returns a SettingsScope<T> whose get()/update()/watch() are typed.
   const settings = ctx.get('settings')
   const scope = settings?.register(
     settingsNamespace(CONVERSATION_LANGUAGE_NAMESPACE),
@@ -97,29 +96,36 @@ export function apply(ctx: Context): void {
   }
   ctx.provide('conversationLanguage', languageService)
 
-  // Track current persona to avoid redundant section updates
-  let currentPersona: typeof PERSONA_ZH | typeof PERSONA_EN = PERSONA_ZH
+  // CRITICAL: Use a reactive object to ensure the text function always reads
+  // the latest value. This avoids closure staleness issues where the text
+  // function might capture an outdated variable reference.
+  const personaState = {
+    zh: PERSONA_ZH,
+    en: PERSONA_EN,
+    get current() {
+      return this[scope?.get()?.conversationLanguage ?? 'zh']
+    }
+  }
 
   // Register a dynamic persona section at order -1, between harness identity (-100)
   // and the default deployment persona (0). Use `complete: true` to replace the
-  // entire system prompt with our language-specific persona, ensuring the model
-  // follows our instructions for both thinking and reply.
+  // entire system prompt with our language-specific persona.
   ctx.systemPrompt.section({
     name: 'conversation-language-persona',
     order: -1,
     complete: true,
-    text: () => currentPersona,
+    text: () => personaState.current,
   })
 
   // Watch for language changes and update the persona immediately
   scope?.watch((next) => {
+    // Force re-evaluation by triggering a state change
     const lang = next.conversationLanguage ?? 'zh'
-    currentPersona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
+    Object.defineProperty(personaState, 'current', {
+      get: () => lang === 'en' ? PERSONA_EN : PERSONA_ZH,
+      configurable: true
+    })
   })
-
-  // Also set initial persona from current settings
-  const initialLang = scope?.get()?.conversationLanguage ?? 'zh'
-  currentPersona = initialLang === 'en' ? PERSONA_EN : PERSONA_ZH
 
   // Register tool to query the current language
   ctx.tools.register(defineTool({
@@ -146,4 +152,3 @@ export function apply(ctx: Context): void {
     }),
   }))
 }
-
