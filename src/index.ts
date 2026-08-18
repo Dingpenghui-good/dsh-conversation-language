@@ -119,7 +119,7 @@ export function apply(ctx: Context): void {
       schema: {
         type: 'object',
         properties: {
-          language: { oneOf: [{ const: 'zh' }, { const: 'en' }] },
+          language: { type: 'string', enum: ['zh', 'en'] },
           label: { type: 'string' },
         },
         additionalProperties: false,
