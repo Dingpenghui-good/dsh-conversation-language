@@ -1,6 +1,6 @@
 {
   "name": "dsh-conversation-language",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
   "main": "./lib/index.js",
