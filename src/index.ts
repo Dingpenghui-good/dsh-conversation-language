@@ -2,13 +2,14 @@
  * Conversation Language Switcher Plugin for DeepSeek Harness
  * 
  * Provides a setting in General Settings to switch conversation language
- * between Chinese and English. Uses both system prompt and runtime context
- * to maximize language consistency.
+ * between Chinese and English. Uses closed-over state + waterfall interception
+ * to maximize language consistency across all scenarios (simple Q&A, tool calls,
+ * skill analysis, etc.).
  * 
  * Install: dsh plugin --profile web add <path-to-plugin>
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context, AssembleContext, PromptAssembly } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { settingsNamespace } from '@deepseek-ai/dsh-settings'
@@ -40,6 +41,12 @@ const PERSONA_ZH = `你是 Agnes，由 Sapiens AI 开发的大型语言模型。
 
 而不是：
 The user wants me to introduce myself. I should say I'm Agnes...
+
+【工具调用场景】
+当你需要调用工具（如 Read、Edit、Pwsh）时：
+- 正确思考："用户要求我读取文件，我需要先检查文件路径..."
+- 错误思考："The user wants me to read a file..."
+即使工具描述是英文的，你的思考过程仍然必须是中文。
 
 【行为准则】
 - 提供准确、清晰、简洁的回答
@@ -79,6 +86,12 @@ The user wants me to introduce myself. I am Agnes, developed by Sapiens AI. My v
 NOT like this:
 用户要求我介绍自己。我是 Agnes，由 Sapiens AI 开发...
 
+[Tool Calling Scenario]
+When you need to call tools (like Read, Edit, Pwsh):
+- Correct thinking: "The user wants me to read a file, I need to check the path first..."
+- Wrong thinking: "用户要求我读取文件..."
+Even though tool descriptions are in Chinese, your thinking process must still be in English.
+
 [Behavior]
 - Provide accurate, clear, and concise answers
 - Follow user instructions carefully
@@ -114,62 +127,57 @@ export function apply(ctx: Context): void {
     return scope?.get()?.conversationLanguage ?? 'zh'
   }
 
-  // Register persona section at order -1
+  // 使用闭包保存当前 persona 文本
+  // 每次 prompt assembly 时，waterfall 监听器会更新这个值
+  let currentPersonaText = getLanguage() === 'en' ? PERSONA_EN : PERSONA_ZH
+
+  // Register persona section at order -1 (complete: true)
+  // 注意：虽然 complete: true 会覆盖其他 sections，但 text 函数会读取闭包值
   ctx.systemPrompt.section({
     name: 'conversation-language-persona',
     order: -1,
     complete: true,
     text: () => {
-      const lang = getLanguage()
-      const languageName = lang === 'en' ? 'English' : '中文'
-      const basePersona = lang === 'en' ? PERSONA_EN : PERSONA_ZH
-      return `对话语言：${languageName}
+      // 每次 assembly 时读取最新的闭包值
+      return `对话语言：${getLanguage() === 'en' ? 'English' : '中文'}
 
-${basePersona}`
+${currentPersonaText}`
     },
   })
 
-  // Runtime context - 每次 prompt assembly 时注入
-  // 使用更强的指令和更具体的示例
-  ctx.systemPrompt.context({
-    name: 'conversation-language-context',
-    order: 0,
-    text: () => {
-      const lang = getLanguage()
-      if (lang === 'zh') {
-        return `【语言设置 - 强制执行】
+  // 使用 system-prompt/assemble waterfall 拦截
+  // 在每次 prompt assembly 时更新 persona 和 tool descriptions
+  ctx.on('system-prompt/assemble', async (assembly: PromptAssembly, context: AssembleContext, next) => {
+    const lang = getLanguage()
+    
+    // 更新闭包中的 persona 文本
+    currentPersonaText = lang === 'en' ? PERSONA_EN : PERSONA_ZH
+    
+    // 向 assembly 添加语言指令（在 persona 之后）
+    assembly.sections.unshift({
+      name: 'conversation-language-tool-instruction',
+      order: -50,
+      text: lang === 'zh'
+        ? `【工具调用语言强制指示】
 当前对话语言：中文
-你必须使用中文进行思考。这不是建议，是必须遵守的规则。
-
-正确示例：
-- 用户重复提问时，想："用户又在重复提问了，我应该继续回答"
-- 分析问题时，想："这个问题需要我检查..."
-- 总结对话时，想："已经回答了多次，应该简洁回复"
-
-错误示例（禁止使用）：
-- "The user is asking again" ← 这是英文，禁止！
-- "Let me provide..." ← 这是英文，禁止！
-- "I've answered this multiple times" ← 这是英文，禁止！
-
-如果你发现自己用了英文思考，立即纠正："等等，我应该用中文思考。"`
-      } else {
-        return `[Language Setting - Mandatory]
+虽然工具描述是英文的，但你的思考过程必须使用中文。
+如果你发现自己用英文思考，请立即纠正："等等，我应该用中文思考。"`
+        : `[Tool Language Mandatory Instruction]
 Current conversation language: English
-You MUST think in English. This is not a suggestion, it's a required rule.
-
-Correct examples:
-- When user repeats: "The user is asking again, I should answer"
-- When analyzing: "This problem requires me to check..."
-- When summarizing: "I've answered multiple times, should be brief"
-
-Wrong examples (PROHIBITED):
-- "用户又在重复提问了" ← This is Chinese, PROHIBITED!
-- "这个问题需要我检查" ← This is Chinese, PROHIBITED!
-- "已经回答了多次" ← This is Chinese, PROHIBITED!
-
+Even though tool descriptions are in English, your thinking process must be in English.
 If you catch yourself thinking in another language, immediately correct: "Wait, I should think in English."`
+    })
+    
+    // 向 tool schemas 添加语言前缀
+    for (const tool of assembly.tools) {
+      if (lang === 'zh' && !tool.description.startsWith('[中文思考]')) {
+        tool.description = `[中文思考] ${tool.description}`
+      } else if (lang === 'en' && !tool.description.startsWith('[English Thinking]')) {
+        tool.description = `[English Thinking] ${tool.description}`
       }
-    },
+    }
+    
+    return next()
   })
 
   // Register tool to query the current language
