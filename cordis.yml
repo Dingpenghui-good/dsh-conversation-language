@@ -1,3 +1,5 @@
-# 对话语言切换插件配置（静态插件）
-- id: tool-conversation-language
-  name: './lib/index.js'
+# 对话语言切换插件配置
+# 注意：插件通过 cordis.patch.yml 以 bundle 方式安装，
+# 不应在此处重复定义 id: tool-conversation-language，
+# 否则会导致 duplicate loader entry id 错误。
+[]
