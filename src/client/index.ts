@@ -3,7 +3,7 @@
  * Registers the Language Switcher row into the General Settings section.
  */
 import type { BoundActions, LocaleNamespaceMap } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 
 import { LanguageSwitcherRow } from './LanguageSwitcherRow.tsx'

@@ -9,8 +9,6 @@ const PLUGIN_ID = 'dsh-conversation-language'
 const CSS_VIRTUAL_PREFIX = '\0dsh-css:'
 const CSS_VIRTUAL_SUFFIX = '.mjs'
 
-const RUNTIME_STORE_EXEMPTION = '@deepseek-ai/dsh-client-runtime/client'
-
 const CLIENT_EXTERNALS = [
   'react',
   'react/jsx-runtime',
@@ -22,7 +20,7 @@ const CLIENT_EXTERNALS = [
   '@deepseek-ai/dsh-client-ui-primitives',
   '@deepseek-ai/dsh-client-ui-attachment',
   '@deepseek-ai/dsh-client-schema-form',
-  RUNTIME_STORE_EXEMPTION,
+  '@deepseek-ai/dsh-client-store',
 ] as const
 
 const INLINE_SAFE = /^@deepseek-ai\/dsh-(host-apiproxy|session|llm|tools|brand)(\/|$)/
