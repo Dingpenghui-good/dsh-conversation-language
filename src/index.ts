@@ -24,13 +24,9 @@ const ConversationLanguageSchema = z.object({
   conversationLanguage: z.union(['zh', 'en']).required(false),
 })
 
-// Persona templates — follow DSH default template structure ({{model}}/{{cwd}}),
-// only add the language instruction section per locale.
-const PERSONA_ZH = `你是 Agnes，由 Sapiens AI 开发的大型语言模型。
-
-你的知识截止到 2026 年 7 月。
-
-你是 Agnes-2.5-Flash，由 Sapiens AI 开发的语言模型。
+// Persona templates — use DSH default template structure, only add language
+// instruction section per locale.
+const PERSONA_ZH = `你是一个由 {{model}} 模型驱动的代码助手。你的工作目录是 {{cwd}}。
 
 【语言指令】
 当前对话语言为「中文」。你必须：
