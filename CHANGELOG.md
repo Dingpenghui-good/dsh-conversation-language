@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-06
+
+### Changed
+- 重构 persona 注入逻辑：不再硬编码完整 persona，改为动态检测当前 preset 的 persona 并只追加语言指令部分
+- 精简语言指令内容，移除冗余的行为准则、身份、限制等描述
+- 使用 `PERSONA_SECTION` 常量替代硬编码字符串
+---
+
+### Changed
+- Refactored persona injection logic: no longer hardcodes full persona, dynamically detects current preset's persona and only appends language instruction section
+- Simplified language instruction content, removed redundant behavior guidelines, identity, and restrictions
+- Uses `PERSONA_SECTION` constant instead of hardcoded string
+
 ## [1.3.0] - 2026-09-04
 
 ### Fixed
