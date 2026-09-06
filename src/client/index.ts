@@ -2,7 +2,7 @@
  * Client-side entry for the conversation language switcher plugin.
  * Registers the Language Switcher row into the General Settings section.
  */
-import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
+import type { BoundActions } from './types-compat.ts'
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 

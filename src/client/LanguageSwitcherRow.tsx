@@ -2,7 +2,7 @@
  * Conversation Language Switcher Row for General Settings
  */
 import { useState } from 'react'
-import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsLocale, PropsRuntime, PropsStore } from './types-compat.ts'
 import { IconChevronDownOutline14, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { createLanguageSwitcherStore } from './settings-store.ts'

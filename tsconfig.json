@@ -14,7 +14,9 @@
     "sourceMap": true,
     "outDir": "./lib",
     "rootDir": "./src",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "resolvePackageJsonExports": true,
+    "resolvePackageJsonImports": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "lib", "tests"]
