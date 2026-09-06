@@ -2,23 +2,13 @@
  * Client-side entry for the conversation language switcher plugin.
  * Registers the Language Switcher row into the General Settings section.
  */
-import type { BoundActions, LocaleNamespaceMap } from '@deepseek-ai/dsh-client-ui-slots'
+import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 
 import { LanguageSwitcherRow } from './LanguageSwitcherRow.tsx'
 import { createLanguageSwitcherStore } from './settings-store.ts'
 import { zh as zhDict, en as enDict } from '../locales/index.ts'
-
-// Declare locale namespace for this plugin
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    'settings.conversation-language': {
-      'conversation-language.title': string
-      'conversation-language.hint': string
-    }
-  }
-}
 
 export const inject = ['slots', 'locale', 'connection', 'remote', 'settingsScope'] as const
 

@@ -9,9 +9,12 @@
  * Install: dsh plugin --profile web add <path-to-plugin>
  */
 
-import type { Context, AssembleContext, PromptAssembly } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
+import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
+// Ensure module augmentation for systemPrompt service and system-prompt/assemble event is visible
+import '@deepseek-ai/dsh-system-prompt'
 // Settings namespace
 const CONVERSATION_LANGUAGE_NAMESPACE = 'conversation-language'
 
@@ -145,7 +148,7 @@ ${currentPersonaText}`
 
   // 使用 system-prompt/assemble waterfall 拦截
   // 在每次 prompt assembly 时更新 persona 和 tool descriptions
-  ctx.on('system-prompt/assemble', async (assembly: PromptAssembly, context: AssembleContext, next) => {
+  ctx.on('system-prompt/assemble', async (assembly: PromptAssembly, context: AssembleContext, next: () => Promise<PromptAssembly>) => {
     const lang = getLanguage()
     
     // 更新闭包中的 persona 文本
@@ -154,7 +157,6 @@ ${currentPersonaText}`
     // 向 assembly 添加语言指令（在 persona 之后）
     assembly.sections.unshift({
       name: 'conversation-language-tool-instruction',
-      order: -50,
       text: lang === 'zh'
         ? `【工具调用语言强制指示】
 当前对话语言：中文
