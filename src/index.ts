@@ -12,8 +12,6 @@
 import type { Context, AssembleContext, PromptAssembly } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
-
 // Settings namespace
 const CONVERSATION_LANGUAGE_NAMESPACE = 'conversation-language'
 
@@ -118,7 +116,7 @@ export function apply(ctx: Context): void {
   // Register settings namespace
   const settings = ctx.get('settings')
   const scope = settings?.register(
-    settingsNamespace(CONVERSATION_LANGUAGE_NAMESPACE),
+    CONVERSATION_LANGUAGE_NAMESPACE,
     ConversationLanguageSchema,
   )
 
