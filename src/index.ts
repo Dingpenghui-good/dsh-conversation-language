@@ -11,6 +11,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
+import { PERSONA_SECTION } from '@deepseek-ai/dsh-system-prompt'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 // Ensure module augmentation for systemPrompt service and system-prompt/assemble event is visible
@@ -23,7 +24,9 @@ const ConversationLanguageSchema = z.object({
   conversationLanguage: z.union(['zh', 'en']).required(false),
 })
 
-// Persona templates - 加入思维链示例
+// Persona templates — follow DSH default template structure, only the language
+// instruction block differs per locale. The persona content itself is identical
+// to the deployment default; only the thinking-language directive changes.
 const PERSONA_ZH = `你是 Agnes，由 Sapiens AI 开发的大型语言模型。
 
 你的知识截止到 2026 年 7 月。
@@ -132,10 +135,10 @@ export function apply(ctx: Context): void {
   // 每次 prompt assembly 时，waterfall 监听器会更新这个值
   let currentPersonaText = getLanguage() === 'en' ? PERSONA_EN : PERSONA_ZH
 
-  // Register persona section at order -1 (complete: true)
-  // 注意：虽然 complete: true 会覆盖其他 sections，但 text 函数会读取闭包值
+  // 注册 persona 段，覆盖 DSH 默认 persona（保持 DSH 默认模板结构）
+  // name 使用 PERSONA_SECTION 以正确遮蔽部署级默认 persona
   ctx.systemPrompt.section({
-    name: 'conversation-language-persona',
+    name: PERSONA_SECTION,
     order: -1,
     complete: true,
     text: () => {
@@ -150,24 +153,10 @@ ${currentPersonaText}`
   // 在每次 prompt assembly 时更新 persona 和 tool descriptions
   ctx.on('system-prompt/assemble', async (assembly: PromptAssembly, context: AssembleContext, next: () => Promise<PromptAssembly>) => {
     const lang = getLanguage()
-    
+
     // 更新闭包中的 persona 文本
     currentPersonaText = lang === 'en' ? PERSONA_EN : PERSONA_ZH
-    
-    // 向 assembly 添加语言指令（在 persona 之后）
-    assembly.sections.unshift({
-      name: 'conversation-language-tool-instruction',
-      text: lang === 'zh'
-        ? `【工具调用语言强制指示】
-当前对话语言：中文
-虽然工具描述是英文的，但你的思考过程必须使用中文。
-如果你发现自己用英文思考，请立即纠正："等等，我应该用中文思考。"`
-        : `[Tool Language Mandatory Instruction]
-Current conversation language: English
-Even though tool descriptions are in English, your thinking process must be in English.
-If you catch yourself thinking in another language, immediately correct: "Wait, I should think in English."`
-    })
-    
+
     // 向 tool schemas 添加语言前缀
     for (const tool of assembly.tools) {
       if (lang === 'zh' && !tool.description.startsWith('[中文思考]')) {
@@ -176,7 +165,7 @@ If you catch yourself thinking in another language, immediately correct: "Wait, 
         tool.description = `[English Thinking] ${tool.description}`
       }
     }
-    
+
     return next()
   })
 
