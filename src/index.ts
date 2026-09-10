@@ -11,7 +11,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
-import { PERSONA_SECTION } from '@deepseek-ai/dsh-system-prompt'
+import { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION } from '@deepseek-ai/dsh-system-prompt'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 // Ensure module augmentation for systemPrompt service and system-prompt/assemble event is visible
@@ -71,7 +71,12 @@ export function apply(ctx: Context): void {
     currentLanguageSuffix = lang === 'en' ? LANGUAGE_SUFFIX_EN : LANGUAGE_SUFFIX_ZH
 
     // 查找当前 preset 的 persona section
-    const personaSection = assembly.sections.find(s => s.name === PERSONA_SECTION)
+    // DSH 0.1.5+ 将 persona 拆分为 prefix（order 0，preset 影子）与 suffix
+    // （order 10200）两个 section；优先追加到 prefix（与原 0.1.2 的
+    // 'deployment:persona' 位置一致），prefix 缺失时回退到 suffix。
+    const personaSection =
+      assembly.sections.find(s => s.name === PERSONA_PREFIX_SECTION)
+      ?? assembly.sections.find(s => s.name === PERSONA_SUFFIX_SECTION)
     if (personaSection) {
       // 在 persona 末尾追加语言指令
       personaSection.text += currentLanguageSuffix

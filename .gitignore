@@ -3,6 +3,8 @@ node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+# pnpm-managed local settings (minimumReleaseAge exclusions for @deepseek-ai/* prereleases)
+pnpm-workspace.yaml
 
 # Build output
 lib/

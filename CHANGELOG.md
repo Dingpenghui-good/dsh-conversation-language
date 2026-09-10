@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-17
+
+### Fixed
+- 适配 DSH `0.1.5-rc.1`：`@deepseek-ai/dsh-system-prompt` 已移除 `PERSONA_SECTION`，
+  persona section 拆分为 `PERSONA_PREFIX_SECTION`（`deployment:persona-prefix`，order 0）
+  与 `PERSONA_SUFFIX_SECTION`（`deployment:persona-suffix`，order 10200）。
+  宿主侧改为优先向 prefix section 追加语言指令，prefix 缺失时回退 suffix；
+  旧版本中 `PERSONA_SECTION` 的 ESM 具名导入会在 0.1.5+ 运行时抛链接错误，导致宿主半
+  （settings 注册 / tool / waterfall 拦截）整体失效
+- 全部 `@deepseek-ai/dsh-*` 依赖区间 `^0.1.2-rc.1` → `^0.1.5-rc.1`
+  （npm/pnpm 的预发布版本 semver 规则下，旧区间永远解析不到 `0.1.5-rc.1`，
+  会固定回旧包并静默失效）
+- `tsdown.config.ts` 中失效的 external 名 `@deepseek-ai/dsh-client-web-react`
+  → `@deepseek-ai/dsh-client-web`
+
+---
+
+### Fixed
+- DSH `0.1.5-rc.1` compatibility: `@deepseek-ai/dsh-system-prompt` dropped
+  `PERSONA_SECTION`; the persona is now split into `PERSONA_PREFIX_SECTION`
+  (`deployment:persona-prefix`, order 0) and `PERSONA_SUFFIX_SECTION`
+  (`deployment:persona-suffix`, order 10200). The Host half now appends the
+  language instruction to the prefix section (falling back to the suffix); the
+  old named ESM import of `PERSONA_SECTION` throws a link error on 0.1.5+ and
+  disables the entire Host half (settings namespace, tool, waterfall listener)
+- Bumped every `@deepseek-ai/dsh-*` range `^0.1.2-rc.1` → `^0.1.5-rc.1`
+  (npm/pnpm prerelease semver rules mean the old range can never resolve to
+  `0.1.5-rc.1` and silently pins the stale package)
+- `tsdown.config.ts`: stale external `@deepseek-ai/dsh-client-web-react`
+  renamed to `@deepseek-ai/dsh-client-web`
+
 ## [1.4.0] - 2026-09-06
 
 ### Changed

@@ -108,15 +108,34 @@ dsh-conversation-language/
 └── README.md
 ```
 
+## 兼容性
+
+| DSH 版本 | 插件版本 | 说明 |
+|----------|---------|------|
+| 0.1.2-rc.1 | ≤ 1.4.0 | 旧的单一 `deployment:persona` section（`PERSONA_SECTION`） |
+| 0.1.5-rc.1 | ≥ 1.5.0 | persona 拆分为 `deployment:persona-prefix` / `deployment:persona-suffix`，宿主侧改用 `PERSONA_PREFIX_SECTION`（缺失时回退 `PERSONA_SUFFIX_SECTION`）；全部 `@deepseek-ai/dsh-*` 依赖区间升至 `^0.1.5-rc.1` |
+
 ## 开发
 
 ```bash
 cd dsh-conversation-language
-npm install
-npm run build   # 构建产物到 lib/；安装前必须执行此步
+pnpm install
+pnpm run build   # 构建产物到 lib/；安装前必须执行此步
 ```
 
-> ⚠️ **必须执行 `npm run build`**，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
+升级 DSH 大版本后，可用 `node runtime-verify.mjs` 对当前 node_modules 中的
+`@deepseek-ai/*` 版本做一次宿主侧运行时回归（settings 注册、tool 注册/执行、
+`system-prompt/assemble` 拦截在 global 与 scoped assembly 下的行为）：
+
+```bash
+node runtime-verify.mjs   # 全部 PASS 且 exit 0 即表示兼容
+```
+
+> ⚠️ **必须执行构建**，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
+>
+> 请使用 **pnpm** 安装依赖：`@deepseek-ai/dsh-*@0.1.5-rc.1` 等预发布版本在 npm 注册表中
+> 处于「已发布但不可被 npm 解析」状态，`npm install` 会以 `ETARGET` 失败；pnpm 可以正常
+> 解析并安装这些版本。
 
 ## License
 
