@@ -33,7 +33,8 @@ const LANGUAGE_SUFFIX_ZH = `
 当前对话语言为「中文」。你必须：
 1. 所有思考过程使用中文
 2. 所有回复内容使用中文
-3. 如果思考中使用了英文，立即纠正回中文`
+3. 所有面向用户可见的文本都必须使用中文，包括工具调用的参数值：pwsh/bash 的 description、todo_write 的 content、subagent 的 description、任务与作业的名称等，都要用中文书写；不要沿用工具 schema 里的英文示例措辞（例如 "List files in current directory"）
+4. 如果思考中使用了英文，立即纠正回中文`
 
 const LANGUAGE_SUFFIX_EN = `
 
@@ -41,7 +42,8 @@ const LANGUAGE_SUFFIX_EN = `
 The current conversation language is "English". You MUST:
 1. Use English for all thinking processes
 2. Use English for all response content
-3. If you accidentally think in another language, immediately correct back to English`
+3. Use English for every user-visible string, including tool-call argument values: the description argument of pwsh/bash, todo_write content, subagent descriptions, and job or task titles. Do not reuse the English wording of a tool schema's examples.
+4. If you accidentally think in another language, immediately correct back to English`
 
 export const name = 'conversation-language'
 export const inject = ['settings', 'systemPrompt', 'tools'] as const

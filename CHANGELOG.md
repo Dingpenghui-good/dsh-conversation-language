@@ -5,7 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.1] - 2026-09-12
+
+### Changed
+- 语言指令的作用域从「思考过程 + 回复内容」扩展到**所有面向用户可见的文本**，明确
+  要求工具调用的参数值使用当前语言：`pwsh`/`bash` 的 `description`、`todo_write` 的
+  `content`、`subagent` 的 `description`、任务与作业名称等，并禁止沿用工具 schema 中
+  的英文示例措辞。此前 `pwsh` 卡片上显示的描述始终是英文——该文案取自调用的
+  `description` 参数，而旧指令只约束「思考」与「回复内容」，工具参数被模型视为第三类
+  文本，加上 `dsh-tool-pwsh` 的参数 schema 自带英文示例（`"ls" → "List files in
+  current directory"`），于是稳定输出英文 active voice
+
+---
+
+### Changed
+- The language instruction now covers **every user-visible string**, not just
+  "thinking" and "response content": tool-call argument values must use the
+  current language (`pwsh`/`bash` `description`, `todo_write` `content`,
+  `subagent` `description`, job and task titles), and must not reuse the English
+  wording of a tool schema's examples. Previously the `pwsh` card always showed an
+  English description, because that text is the call's `description` argument —
+  outside the old instruction's scope — and `dsh-tool-pwsh` ships English examples
+  in its parameter schema (`"ls" → "List files in current directory"`)
 
 ## [1.5.0] - 2026-07-17
 

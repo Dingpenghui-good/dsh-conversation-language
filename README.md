@@ -77,7 +77,10 @@ conversation-language:
 
 ## 使用
 
-切换语言后，AI 将自动以对应语言进行思考和回复。也可通过 `get_conversation_language` Tool 查询当前设置。
+切换语言后，AI 将自动以对应语言进行思考和回复，并让所有面向用户可见的文本保持同一语言——
+包括工具调用的参数值（`pwsh`/`bash` 卡片上显示的 `description`、`todo_write` 的 `content`、
+`subagent` 的 `description`、任务与作业名称等）。也可通过 `get_conversation_language` Tool
+查询当前设置。
 
 ## 技术说明
 
