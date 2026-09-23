@@ -6,8 +6,8 @@ export interface ConversationLanguageSettings {
   conversationLanguage?: 'zh' | 'en'
 }
 
-/** Schema key for the language settings namespace */
-export const LANGUAGE_SETTINGS_NAMESPACE = 'conversation-language' as const
+/** The settings namespace is the profile entry id of the plugin row. */
+export const LANGUAGE_SETTINGS_NAMESPACE = 'tool-conversation-language' as const
 
 /** Default language */
 export const DEFAULT_LANGUAGE: 'zh' | 'en' = 'zh'

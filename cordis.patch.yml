@@ -1,5 +1,12 @@
 # 对话语言切换插件配置
 # 安装方式: dsh plugin --profile web add <path-to-plugin>
+#
+# The row id IS the settings namespace: the settings framework keys every
+# descriptor by the entry's id, and the client addresses the form through
+# `configForms.get('tool-conversation-language')`. The schema default
+# (conversationLanguage: 'zh') materializes when the row ships no config.
 - insert:
     - id: tool-conversation-language
       name: 'dsh-conversation-language'
+      config:
+        conversationLanguage: 'zh'

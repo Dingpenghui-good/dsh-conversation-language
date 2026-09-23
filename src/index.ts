@@ -1,12 +1,19 @@
 /**
  * Conversation Language Switcher Plugin for DeepSeek Harness
- * 
+ *
  * Provides a setting in General Settings to switch conversation language
  * between Chinese and English. Uses closed-over state + waterfall interception
  * to maximize language consistency across all scenarios (simple Q&A, tool calls,
  * skill analysis, etc.).
- * 
+ *
  * Install: dsh plugin --profile web add <path-to-plugin>
+ *
+ * Architecture (DSH 0.1.7-alpha.2+):
+ * - Host half declares a `Config` schema with a volatile `conversationLanguage`
+ *   field; the settings framework projects it to the browser and persists it
+ *   through the active profile's Cordis patch.
+ * - The `system-prompt/assemble` waterfall reads the live settings value on
+ *   every assembly, so language switches take effect without a restart.
  */
 
 import type { Context } from '@deepseek-ai/cordis'
@@ -15,13 +22,26 @@ import { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION } from '@deepseek-ai/dsh
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 // Ensure module augmentation for systemPrompt service and system-prompt/assemble event is visible
-import '@deepseek-ai/dsh-system-prompt'
-// Settings namespace
-const CONVERSATION_LANGUAGE_NAMESPACE = 'conversation-language'
+import type {} from '@deepseek-ai/dsh-system-prompt'
+// Pull the SettingsForms Context merge (ctx.settings) into this program.
+import type {} from '@deepseek-ai/dsh-settings'
+import { CONVERSATION_LANGUAGE_NAMESPACE, type ConversationLanguage } from './shared.ts'
 
-// Schema
-const ConversationLanguageSchema = z.object({
-  conversationLanguage: z.union(['zh', 'en']).required(false),
+export { CONVERSATION_LANGUAGE_NAMESPACE }
+export type { ConversationLanguage }
+
+/** Plugin config: the language the conversation runs in. */
+export interface Config {
+  /**
+   * Conversation language the model thinks and replies in. Volatile: the
+   * settings UI writes it through the active profile's Cordis patch.
+   */
+  conversationLanguage: 'zh' | 'en'
+}
+
+/** Runtime schema for the conversation-language row. */
+export const Config: z<Config> = z.object({
+  conversationLanguage: z.union(['zh', 'en']).volatile().default('zh'),
 })
 
 // Persona templates — append language instruction to whatever preset persona
@@ -46,31 +66,29 @@ The current conversation language is "English". You MUST:
 4. If you accidentally think in another language, immediately correct back to English`
 
 export const name = 'conversation-language'
-export const inject = ['settings', 'systemPrompt', 'tools'] as const
+export const inject = ['systemPrompt', 'tools'] as const
 
+/**
+ * Register the tool and the `system-prompt/assemble` waterfall interception.
+ * The language is read from the settings framework on every assembly so a
+ * switch takes effect on the very next model step without a remount.
+ * @param ctx - the plugin context carrying the settings, systemPrompt, and tools services.
+ */
 export function apply(ctx: Context): void {
-  // Register settings namespace
   const settings = ctx.get('settings')
-  const scope = settings?.register(
-    CONVERSATION_LANGUAGE_NAMESPACE,
-    ConversationLanguageSchema,
-  )
 
-  // Get current language from settings
-  const getLanguage = (): 'zh' | 'en' => {
-    return scope?.get()?.conversationLanguage ?? 'zh'
+  /** Read the live conversation language from the settings framework. */
+  const getLanguage = (): ConversationLanguage => {
+    if (settings === undefined) return 'zh'
+    const descriptor = settings.describe().find(row => row.ns === CONVERSATION_LANGUAGE_NAMESPACE)
+    const value = descriptor?.value as { conversationLanguage?: ConversationLanguage } | undefined
+    return value?.conversationLanguage ?? 'zh'
   }
-
-  // 使用闭包保存语言后缀（根据当前语言动态选择）
-  let currentLanguageSuffix = getLanguage() === 'en' ? LANGUAGE_SUFFIX_EN : LANGUAGE_SUFFIX_ZH
 
   // 使用 system-prompt/assemble waterfall 拦截
   // 动态读取当前 preset 的 persona，追加语言部分
   ctx.on('system-prompt/assemble', async (assembly: PromptAssembly, context: AssembleContext, next: () => Promise<PromptAssembly>) => {
     const lang = getLanguage()
-
-    // 更新语言后缀
-    currentLanguageSuffix = lang === 'en' ? LANGUAGE_SUFFIX_EN : LANGUAGE_SUFFIX_ZH
 
     // 查找当前 preset 的 persona section
     // DSH 0.1.5+ 将 persona 拆分为 prefix（order 0，preset 影子）与 suffix
@@ -81,14 +99,14 @@ export function apply(ctx: Context): void {
       ?? assembly.sections.find(s => s.name === PERSONA_SUFFIX_SECTION)
     if (personaSection) {
       // 在 persona 末尾追加语言指令
-      personaSection.text += currentLanguageSuffix
+      personaSection.text += lang === 'en' ? LANGUAGE_SUFFIX_EN : LANGUAGE_SUFFIX_ZH
     }
 
     // 向 tool schemas 添加语言前缀
     for (const tool of assembly.tools) {
-      if (lang === 'zh' && !tool.description.startsWith('[中文思考]')) {
+      if (lang === 'zh' && !String(tool.description).startsWith('[中文思考]')) {
         tool.description = `[中文思考] ${tool.description}`
-      } else if (lang === 'en' && !tool.description.startsWith('[English Thinking]')) {
+      } else if (lang === 'en' && !String(tool.description).startsWith('[English Thinking]')) {
         tool.description = `[English Thinking] ${tool.description}`
       }
     }
@@ -115,9 +133,12 @@ export function apply(ctx: Context): void {
         text: `当前对话语言：${value.label} (${value.language})`,
       }],
     },
-    execute: async () => ({
-      language: getLanguage(),
-      label: getLanguage() === 'zh' ? '中文' : 'English',
-    }),
+    execute: async () => {
+      const lang = getLanguage()
+      return {
+        language: lang,
+        label: lang === 'zh' ? '中文' : 'English',
+      }
+    },
   }))
 }

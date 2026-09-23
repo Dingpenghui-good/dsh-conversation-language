@@ -2,18 +2,27 @@
  * Conversation Language Switcher Row for General Settings
  */
 import { useState } from 'react'
-import type { PropsLocale, PropsRuntime, PropsStore } from './types-compat.ts'
 import { IconChevronDownOutline14, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+// Type-only: the settings slot types the `settings.general.item` slot is declared with.
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+// Type-only: the slot props currency.
+import type {
+  PropsLocale, PropsRuntime,
+} from '@deepseek-ai/dsh-client-ui-slots'
+// Type-only: the store currency for the snapshot hook.
 import type { createLanguageSwitcherStore } from './settings-store.ts'
+import type { LanguageSwitcherState } from './settings-store.ts'
+import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-store'
+import type { ConversationLanguage } from '../shared.ts'
 import css from './LanguageSwitcherRow.module.css'
 
 export interface LanguageSwitcherInjected {
-  setConversationLanguage: (id: 'zh' | 'en') => void
+  setConversationLanguage: (id: ConversationLanguage) => void
 }
 
 export type LanguageSwitcherComponentProps =
-  PropsRuntime<'settings.general.item'> & PropsStore<ReturnType<typeof createLanguageSwitcherStore>>
+  PropsRuntime<'settings.general.item'>
+  & { useStore: SnapshotSelectorHook<LanguageSwitcherState> }
   & PropsLocale<'settings.conversation-language'> & LanguageSwitcherInjected
 
 export function LanguageSwitcherRow({ t, setConversationLanguage, useStore }: LanguageSwitcherComponentProps) {
@@ -34,7 +43,7 @@ export function LanguageSwitcherRow({ t, setConversationLanguage, useStore }: La
         items={options.map(o => ({ id: o.id, label: o.label }))}
         selectedId={active}
         onSelect={(id) => {
-          setConversationLanguage(id as 'zh' | 'en')
+          setConversationLanguage(id as ConversationLanguage)
           setOpen(false)
         }}
         align="end"

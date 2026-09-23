@@ -2,20 +2,21 @@
  * Store for conversation language switcher UI
  */
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
+import type { ConversationLanguage } from '../shared.ts'
 
 export interface LanguageOption {
-  id: 'zh' | 'en'
+  id: ConversationLanguage
   label: string
 }
 
 export interface LanguageSwitcherState {
-  active: 'zh' | 'en'
+  active: ConversationLanguage
   options: LanguageOption[]
   revision: number
 }
 
 type LanguageSwitcherActions = {
-  sync: (draft: LanguageSwitcherState, active: 'zh' | 'en', options: LanguageOption[], revision: number) => void
+  sync: (draft: LanguageSwitcherState, active: ConversationLanguage, options: LanguageOption[], revision: number) => void
 }
 
 export function createLanguageSwitcherStore(): EngineStoreHandle<LanguageSwitcherState, LanguageSwitcherActions> {

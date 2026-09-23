@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-XX-XX
+
+### Breaking
+- 适配 DSH `0.1.7-alpha.2+` 的 settings 框架重构：旧宿主侧 `settings.register(namespace, schema)` 命名空间模式已移除
+- 全部 `@deepseek-ai/dsh-*` 依赖区间 `^0.1.5-rc.1` → `^0.1.7-alpha.2`；`@deepseek-ai/schemastery` 升至 `^3.18.4`（`.volatile()` 元数据 API）
+
+### Changed
+- **宿主侧**：改为声明 plugin entry `Config` schema（`z.union(['zh','en']).volatile().default('zh')`），settings 框架按 profile entry id 自动投影命名空间；`system-prompt/assemble` 拦截器在每次组装时通过 `ctx.settings.describe()` 读取实时值
+- **宿主侧 inject**：`['settings', 'systemPrompt', 'tools']` → `['systemPrompt', 'tools']`。Cordis 要求 inject 列表中的服务全部已挂载，settings 服务仅在 profile 上下文（configEditor + profileContext）中可用；缺失时 `getLanguage()` 回退默认 `zh`
+- **客户端侧**：移除已废弃的 `settingsScope` 服务通道，改用 `ctx.configForms.get('tool-conversation-language')` 的 `getSnapshot()/subscribe()/set()`；写入经 `remote.settings.mutate` 落到当前 profile 的 Cordis patch
+- 共享常量（namespace、语言类型）抽到 `src/shared.ts`，客户端 bundle 不再 value-import 任何宿主侧包（purity gate）
+- Settings 持久化目标由 `~/.dsh/settings.yaml` 改为当前 profile 的 `cordis.patch.yml`；`settings.yaml` 旧 section 走 legacy 迁移且不在映射表内
+- 新增 `client-verify.mjs`（客户端 bundle 结构回归）与 `runtime-verify.mjs`（宿主侧 0.1.7 服务回归）
+
+---
+
+### Breaking
+- DSH `0.1.7-alpha.2+` settings framework rework: the old Host `settings.register(namespace, schema)` seam no longer exists
+- Every `@deepseek-ai/dsh-*` range `^0.1.5-rc.1` → `^0.1.7-alpha.2`; `@deepseek-ai/schemastery` bumped to `^3.18.4` (the `.volatile()` metadata API)
+
+### Changed
+- **Host half**: now declares a plugin entry `Config` schema (`z.union(['zh','en']).volatile().default('zh')`); the settings framework projects the namespace by profile entry id, and the `system-prompt/assemble` interceptor reads the live value through `ctx.settings.describe()` on every assembly
+- **Host inject list**: `['settings', 'systemPrompt', 'tools']` → `['systemPrompt', 'tools']`. Cordis requires every injected service to be mounted; the settings service only exists in profile contexts (configEditor + profileContext), so `getLanguage()` falls back to the `zh` default when it is absent
+- **Client half**: the removed `settingsScope` service is replaced by `ctx.configForms.get('tool-conversation-language')` — `getSnapshot()/subscribe()/set()`, with writes flowing through `remote.settings.mutate` into the active profile's Cordis patch
+- Shared constants (namespace, language type) moved to `src/shared.ts` so the client bundle no longer value-imports any Host-only package (purity gate)
+- Settings now persist to the active profile's `cordis.patch.yml` instead of `~/.dsh/settings.yaml`; legacy `settings.yaml` sections migrate via the legacy import mapping (this namespace is not in that table)
+- Added `client-verify.mjs` (client bundle structure regression) and reworked `runtime-verify.mjs` for the 0.1.7 service surface
 ## [1.5.1] - 2026-09-12
 
 ### Changed
