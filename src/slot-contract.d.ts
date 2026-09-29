@@ -18,8 +18,6 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     'settings.conversation-language':
       | 'title'
       | 'description'
-      | 'conversation-language.title'
-      | 'conversation-language.hint'
       | 'page.label'
       | 'page.hint'
       | 'form.unavailable'

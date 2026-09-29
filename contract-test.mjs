@@ -287,18 +287,15 @@ ctx._services.configForms = configForms
 bundle.apply(ctx)
 
 const slots = ctx._services.slots
-check('settings row registered into settings.general.item', () => {
+check('no settings row registered (detail page is the single entry point)', () => {
   const row = slots.registered.find((e) => e.name === 'settings.general.item')
-  assert(row, 'row entry not registered')
-  assert(row.id === 'conversation-language', 'row id mismatch: ' + row.id)
-  assert(row.locale === 'settings.conversation-language', 'row locale mismatch: ' + row.locale)
-  assert(typeof row.component === 'function', 'row component missing')
+  assert(!row, 'settings row should NOT be registered')
 })
 
 check('locale dictionaries registered (zh + en)', () => {
   const dict = ctx._services.locale._dicts['settings.conversation-language']
   assert(dict && dict.zh && dict.en, 'dictionary missing')
-  assert(dict.zh['conversation-language.title'] === '对话内容语言', 'zh title mismatch')
+  assert(dict.zh['page.label'] === '对话语言', 'zh title mismatch')
   assert(dict.en['form.save'] === 'Save', 'en save mismatch')
 })
 
