@@ -2,7 +2,7 @@
  * Conversation Language Switcher Row for General Settings
  */
 import { useState } from 'react'
-import { IconChevronDownOutline14, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChevronDownOutlineMedium, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 // Type-only: the settings slot types the `settings.general.item` slot is declared with.
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: the slot props currency.
@@ -57,7 +57,7 @@ export function LanguageSwitcherRow({ t, setConversationLanguage, useStore }: La
             onClick={() => { setOpen(v => !v) }}
           >
             {activeLabel}
-            <IconChevronDownOutline14 className={css.chevron} />
+            <IconChevronDownOutlineMedium className={css.chevron} />
           </button>
         )}
       />

@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-09-29
+
+### Breaking
+- 适配 DSH `0.2.0-rc.1` 的 breaking changes（client 侧全部 6 个 `@deepseek-ai/*` 依赖升级到 `0.2.0-rc.1`），同时保持 0.1.7 兼容基线
+- schemastery 的 `Config` schema 由 `z.union(['zh','en']).volatile().default('zh')`（旧版推断为 `Schema<any,any>`）改为 `z.union([z.const('zh'), z.const('en')]).volatile().default('zh')`，以匹配 0.2.0-rc.1 更严格的 `TypeS`/`TypeT` 推断
+
+### Changed
+- `IconChevronDownOutline14` → `IconChevronDownOutlineMedium`（0.2.0 primitives 图标命名变更）
+- 移除旧 `src/types.ts`（`CONVERSATION_LANGUAGE_NAMESPACE`、`ConversationLanguage`、`ConversationLanguageSettings` 等已移入 `src/shared.ts` / `src/client/plugin-detail-controller.ts`）
+- 详情页注册改为 `whileServed` + `slots.inject` 守卫模式（参照 `ui-settings-shell`）：
+  - `plugins.bundle.config`（点击插件名字打开的画面）
+  - `plugins.row.config`（行上"配置"控件打开的画面）
+  - 部署从未组合宿主侧命名空间时，页面不留任何痕迹
+- 新增 `src/client/plugin-detail-controller.ts`：详情表单状态管理（草稿编辑、保存、复位）
+- 新增 `src/client/plugin-detail-page.tsx`：详情页 UI（`SettingsFormModel` + `SegmentedControl`）
+- 新增 `src/client/PluginDetailPage.module.css`
+- `src/client/LanguageSwitcherRow.tsx`：`Menu` 改为受控 `open`/`onClose` + 自定义 `anchor`（button + chevron），替代原生 `<select>`
+- `src/client/index.ts`：`locale.register` 改由 `ctx.effect` 包裹；`BoundActions` 改从 `@deepseek-ai/dsh-client-store` 导入（ui-slots 0.2.0 不再 re-export）
+- 新增 devDependencies：`@deepseek-ai/dsh-client-locale`、`@deepseek-ai/dsh-client-ui-renderer`（type-only，0.2.0-rc.1）
+
+---
+
+### Breaking
+- DSH `0.2.0-rc.1` compatibility: all six client-side `@deepseek-ai/*` deps bumped to `0.2.0-rc.1`; schemastery `Config` schema now uses `z.const` literals (`z.union([z.const('zh'), z.const('en')])`) to match the stricter `TypeS`/`TypeT` inference
+### Changed
+- `IconChevronDownOutline14` → `IconChevronDownOutlineMedium` (0.2.0 primitives icon rename)
+- Removed stale `src/types.ts` (namespace/language/settings types now live in `src/shared.ts` / `src/client/plugin-detail-controller.ts`)
+- Detail-page registration now uses `whileServed` + `slots.inject` guard (per `ui-settings-shell`): `plugins.bundle.config` (click plugin name) and `plugins.row.config` (row "Configure" control); a deployment that never composed the owner shows no trace of the page
+- Added `src/client/plugin-detail-controller.ts` (form draft edit/save/reset state) and `src/client/plugin-detail-page.tsx` (`SettingsFormModel` + `SegmentedControl`)
+- `LanguageSwitcherRow.tsx`: `Menu` is now a controlled `open`/`onClose` with a custom `anchor` (button + chevron) instead of a native `<select>`
+- `index.ts`: `locale.register` wrapped in `ctx.effect`; `BoundActions` now imported from `@deepseek-ai/dsh-client-store` (ui-slots 0.2.0 no longer re-exports it)
+- New devDependencies: `@deepseek-ai/dsh-client-locale`, `@deepseek-ai/dsh-client-ui-renderer` (type-only, 0.2.0-rc.1)
+
 ## [2.0.0] - 2026-XX-XX
 
 ### Breaking

@@ -40,8 +40,8 @@ export interface Config {
 }
 
 /** Runtime schema for the conversation-language row. */
-export const Config: z<Config> = z.object({
-  conversationLanguage: z.union(['zh', 'en']).volatile().default('zh'),
+export const Config = z.object({
+  conversationLanguage: z.union([z.const('zh'), z.const('en')]).volatile().default('zh'),
 })
 
 // Persona templates — append language instruction to whatever preset persona

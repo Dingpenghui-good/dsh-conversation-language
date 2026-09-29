@@ -21,6 +21,7 @@ const CLIENT_EXTERNALS = [
   '@deepseek-ai/dsh-client-ui-renderer',
   '@deepseek-ai/dsh-client-ui-settings',
   '@deepseek-ai/dsh-client-store',
+  '@deepseek-ai/dsh-client-ui-plugin-manager',
 ] as const
 
 const INLINE_SAFE = /^@deepseek-ai\/dsh-(host-apiproxy|session|llm|tools|brand)(\/|$)/
