@@ -9,6 +9,7 @@ DSH 插件：对话语言切换器
 ### 特性
 
 - 🌐 在设置界面中直接切换语言
+- 🖱️ 点击插件名/行即可打开**详情页**（含语言选择表单与保存/恢复默认按钮）
 - 🔄 动态更新 Persona（系统提示），无需重启即可生效
 - 💾 设置通过 profile 的 Cordis patch 持久化（当前 profile 的 `cordis.patch.yml`）
 - 🎨 匹配 DSH 原生设置界面样式
@@ -96,18 +97,23 @@ pnpm install
 | Persona Override | `system-prompt/assemble` waterfall 拦截，按语言在 persona section 追加指令 |
 | Tool 注册 | `get_conversation_language` — 查询当前语言设置 |
 
-### 架构（DSH 0.1.7-alpha.2+）
+### 架构（DSH 0.2.0-rc.1+，v3.1.0）
 
 - **宿主侧**（`src/index.ts`）：声明 `Config` schema（`z.union(['zh','en']).volatile().default('zh')`），
   settings 框架按 entry id 自动注册命名空间；`system-prompt/assemble` 拦截器在每次组装时
-  通过 `ctx.settings.describe()` 读取实时值，语言切换无需重启。`apply` 仅注入
+  通过 `ctx.settings.describe()` 读取实时值，语言切换无需重启。`apply` 注入
   `['systemPrompt', 'tools']`——settings 服务缺失时回退默认 `zh`。
-- **客户端侧**（`src/client/`）：通过 `ctx.configForms.get('tool-conversation-language')`
-  订阅宿主 settings 镜像，写入走 `form.set('conversationLanguage', …)`（经
-  `remote.settings.mutate` 落到 profile patch）；slot 行注册遵循
-  `slots.inject('settings.general.item', …)` 标准模式。
-- 共享常量（namespace、语言类型）位于 `src/shared.ts`，保证客户端 bundle 不 value-import
-  任何宿主侧包（客户端 bundle purity gate）。
+- **客户端侧**（`src/client/`）：
+  - **设置行**：`slots.inject('settings.general.item', …)` 注册 `LanguageSwitcherRow`，
+    通过 `ctx.configForms.get('tool-conversation-language')` 订阅宿主 settings 镜像，
+    写入走 `form.mutate(...)`（经 `remote.settings.mutate` 落到 profile patch）。
+  - **详情页**（v3.1.0 新增）：`configForms.whileServed([NS], …)` 守卫注册
+    `plugins.bundle.config`（key = 包名）与 `plugins.row.config`（key = `<包名>#<row-id>`）
+    两个 slot，渲染 `PluginDetailPage`（摘要行 / 语言表单 + 保存 / 恢复默认）。
+    表单走 `SettingsFormModel`（staged form）+ `SettingsForm`，
+    在 0.1.7 表面下这两个 slot 名不存在时 `slots.inject` 静默 no-op，不抛异常。
+  - 共享常量（namespace、语言类型）位于 `src/shared.ts`，保证客户端 bundle 不 value-import
+    任何宿主侧包（客户端 bundle purity gate）。
 
 ### 插件结构
 
@@ -118,15 +124,20 @@ dsh-conversation-language/
 │   ├── shared.ts                   # 共享常量（namespace / 语言类型）
 │   ├── client/
 │   │   ├── index.ts                # Client 层：UI 注册（configForms + slots）
-│   │   ├── LanguageSwitcherRow.tsx # React 组件
+│   │   ├── LanguageSwitcherRow.tsx # React 组件（设置行）
 │   │   ├── LanguageSwitcherRow.module.css
+│   │   ├── PluginDetailPage.tsx    # React 组件（详情页：表单 + 保存/恢复）
+│   │   ├── PluginDetailPage.module.css
+│   │   ├── plugin-detail-controller.ts # 详情页 staged-form 控制器（SettingsFormModel 桥接）
 │   │   └── settings-store.ts       # 状态管理
 │   └── locales/
-│       └── index.ts                # 国际化字典
-├── lib/                            # 构建产物（pnpm run build 生成，安装时必须存在）
+│       └── index.ts                # 国际化字典（zh / en）
+├── lib/                            # 构建产物（tsdown 生成，安装时必须存在）
 ├── cordis.patch.yml                # Cordis bundle patch（entry id = settings namespace）
+├── build-and-verify.mjs            # 一键构建 + 全量验证流水线
 ├── runtime-verify.mjs              # 宿主侧运行时回归
-├── client-verify.mjs               # 客户端 bundle 结构回归
+├── client-verify-0.1.7.mjs        # 0.1.7-alpha.2 回归验证
+├── contract-test.mjs               # 0.2.0-rc.1 客户端契约模拟验证
 ├── package.json
 └── README.md
 ```
@@ -137,7 +148,8 @@ dsh-conversation-language/
 |----------|---------|------|
 | 0.1.2-rc.1 | ≤ 1.4.0 | 旧的单一 `deployment:persona` section（`PERSONA_SECTION`） |
 | 0.1.5-rc.1 | ≥ 1.5.0 | persona 拆分为 prefix/suffix；宿主侧 settings 采用旧的 `settings.register()` 命名空间模式 |
-| 0.1.7-alpha.2+ | ≥ 2.0.0 | settings 框架重构为 plugin entry `Config` schema + `describe()/update()/mutate()`；客户端 `settingsScope` 服务移除，改用 `configForms`。宿主侧 `apply` 不再注入 `settings`（缺失时回退默认值）；客户端 `configForms.get(<entry-id>)` 订阅/写入 |
+| 0.1.7-alpha.2+ | ≥ 2.0.0 | settings 框架重构为 plugin entry `Config` schema + `describe()/update()/mutate()`；客户端 `settingsScope` 服务移除，改用 `configForms` |
+| **0.2.0-rc.1** | **≥ 3.1.0** | 宿主侧改用 `settings` service（`describe()` + `mutate()`）；客户端注册 `plugins.bundle.config` / `plugins.row.config` slot 实现详情页；`SettingsFormModel`（staged form）+ `SettingsForm` 渲染保存/恢复默认；0.1.7 表面下 slot 降级静默 no-op |
 
 ## 开发
 
@@ -150,8 +162,10 @@ pnpm run build   # 构建产物到 lib/；安装前必须执行此步
 升级 DSH 大版本后，可对当前 node_modules 中的 `@deepseek-ai/*` 版本做回归：
 
 ```bash
-node runtime-verify.mjs   # 宿主侧：tool 注册/执行、system-prompt/assemble 拦截，全部 PASS 且 exit 0 即表示兼容
-node client-verify.mjs    # 客户端：bundle 模块面、slot 注册、configForms 通道
+node runtime-verify.mjs        # 宿主侧：tool 注册/执行、system-prompt/assemble 拦截
+node client-verify-0.1.7.mjs   # 0.1.7 回归：CJS 包装 / purity gate / slot 降级
+node contract-test.mjs         # 0.2.0-rc.1 契约：apply(ctx) 注册行 + whileServed 详情页 + 词典 + 写回
+node build-and-verify.mjs      # 一键流水线：tsdown build + tsc + 上述全部验证
 ```
 
 > ⚠️ **必须执行构建**，插件运行时依赖 `lib/` 下的构建产物，不能直接使用源码。
