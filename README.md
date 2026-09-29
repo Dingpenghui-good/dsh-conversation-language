@@ -8,11 +8,10 @@ DSH 插件：对话语言切换器
 
 ### 特性
 
-- 🌐 在设置界面中直接切换语言
-- 🖱️ 点击插件名/行即可打开**详情页**（含语言选择表单与保存/恢复默认按钮）
+- 🖱️ 点击插件名即可打开**详情页**（含语言选择表单与保存/恢复默认按钮），通用设置不再出现重复入口
 - 🔄 动态更新 Persona（系统提示），无需重启即可生效
 - 💾 设置通过 profile 的 Cordis patch 持久化（当前 profile 的 `cordis.patch.yml`）
-- 🎨 匹配 DSH 原生设置界面样式
+- 🎨 匹配 DSH 原生界面样式
 
 ## 安装
 
@@ -61,9 +60,9 @@ pnpm install
 
 ## 配置
 
-### 方式一：通过设置界面
+### 方式一：通过插件详情页
 
-重启 DSH 后，打开 **设置 → 通用设置**，找到「对话内容语言」选项进行切换。
+重启 DSH 后，打开 **插件 → dsh-conversation-language**，在详情页的语言选择表单中切换并保存。
 
 ### 方式二：直接修改 profile patch
 
@@ -97,21 +96,20 @@ pnpm install
 | Persona Override | `system-prompt/assemble` waterfall 拦截，按语言在 persona section 追加指令 |
 | Tool 注册 | `get_conversation_language` — 查询当前语言设置 |
 
-### 架构（DSH 0.2.0-rc.1+，v3.1.0）
+### 架构（DSH 0.2.0-rc.1+，v3.2.0）
 
 - **宿主侧**（`src/index.ts`）：声明 `Config` schema（`z.union(['zh','en']).volatile().default('zh')`），
   settings 框架按 entry id 自动注册命名空间；`system-prompt/assemble` 拦截器在每次组装时
   通过 `ctx.settings.describe()` 读取实时值，语言切换无需重启。`apply` 注入
   `['systemPrompt', 'tools']`——settings 服务缺失时回退默认 `zh`。
 - **客户端侧**（`src/client/`）：
-  - **设置行**：`slots.inject('settings.general.item', …)` 注册 `LanguageSwitcherRow`，
-    通过 `ctx.configForms.get('tool-conversation-language')` 订阅宿主 settings 镜像，
-    写入走 `form.mutate(...)`（经 `remote.settings.mutate` 落到 profile patch）。
-  - **详情页**（v3.1.0 新增）：`configForms.whileServed([NS], …)` 守卫注册
+  - **详情页**（唯一入口）：`configForms.whileServed([NS], …)` 守卫注册
     `plugins.bundle.config`（key = 包名）与 `plugins.row.config`（key = `<包名>#<row-id>`）
     两个 slot，渲染 `PluginDetailPage`（摘要行 / 语言表单 + 保存 / 恢复默认）。
     表单走 `SettingsFormModel`（staged form）+ `SettingsForm`，
     在 0.1.7 表面下这两个 slot 名不存在时 `slots.inject` 静默 no-op，不抛异常。
+  - v3.2.0 起移除了通用设置行（`settings.general.item`），语言设置仅在插件详情页提供，
+    避免同一功能在两个入口重复出现。
   - 共享常量（namespace、语言类型）位于 `src/shared.ts`，保证客户端 bundle 不 value-import
     任何宿主侧包（客户端 bundle purity gate）。
 
@@ -124,12 +122,9 @@ dsh-conversation-language/
 │   ├── shared.ts                   # 共享常量（namespace / 语言类型）
 │   ├── client/
 │   │   ├── index.ts                # Client 层：UI 注册（configForms + slots）
-│   │   ├── LanguageSwitcherRow.tsx # React 组件（设置行）
-│   │   ├── LanguageSwitcherRow.module.css
 │   │   ├── PluginDetailPage.tsx    # React 组件（详情页：表单 + 保存/恢复）
 │   │   ├── PluginDetailPage.module.css
-│   │   ├── plugin-detail-controller.ts # 详情页 staged-form 控制器（SettingsFormModel 桥接）
-│   │   └── settings-store.ts       # 状态管理
+│   │   └── plugin-detail-controller.ts # 详情页 staged-form 控制器（SettingsFormModel 桥接）
 │   └── locales/
 │       └── index.ts                # 国际化字典（zh / en）
 ├── lib/                            # 构建产物（tsdown 生成，安装时必须存在）
@@ -150,6 +145,7 @@ dsh-conversation-language/
 | 0.1.5-rc.1 | ≥ 1.5.0 | persona 拆分为 prefix/suffix；宿主侧 settings 采用旧的 `settings.register()` 命名空间模式 |
 | 0.1.7-alpha.2+ | ≥ 2.0.0 | settings 框架重构为 plugin entry `Config` schema + `describe()/update()/mutate()`；客户端 `settingsScope` 服务移除，改用 `configForms` |
 | **0.2.0-rc.1** | **≥ 3.1.0** | 宿主侧改用 `settings` service（`describe()` + `mutate()`）；客户端注册 `plugins.bundle.config` / `plugins.row.config` slot 实现详情页；`SettingsFormModel`（staged form）+ `SettingsForm` 渲染保存/恢复默认；0.1.7 表面下 slot 降级静默 no-op |
+| **0.2.0-rc.1** | **≥ 3.2.0** | 移除通用设置行（`settings.general.item`），语言设置仅在插件详情页提供（唯一入口） |
 
 ## 开发
 
