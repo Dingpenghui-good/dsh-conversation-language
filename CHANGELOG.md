@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3] - 2026-10-01
+
+### Fixed
+- **宿主包出现在 `dependencies` 会导致任何工具调用崩溃**：`@deepseek-ai/dsh-tools`（以及 `cordis`、`dsh-settings`、`dsh-system-prompt`、`dsh-client-*` 等 9 个宿主包）原先声明在 `dependencies`，pnpm 会在 profile 内装出第二份模块副本。DSH 通过模块级 Symbol（`TOOL_RUNTIME_SCHEDULER = Symbol(...)`）定位工具调度器，而 `Symbol()` 跨模块副本不共享身份，于是 `ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(...)` 取到 `undefined`，抛出 `Cannot read properties of undefined (reading 'prepare')`。现按官方插件的做法，把这些宿主包全部移入 `peerDependencies`（并保留在 `devDependencies` 供本地构建），`dependencies` 只留下 `@deepseek-ai/schemastery` 与 `react`。
+- 升级后需**完全重启 DSH**：旧版本已污染当前进程的服务实例，仅卸载插件不会恢复。
+
+---
+
+### Fixed
+- **Host packages declared under `dependencies` crashed every tool call**: `@deepseek-ai/dsh-tools` (plus `cordis`, `dsh-settings`, `dsh-system-prompt`, `dsh-client-*` — 9 host packages in total) were listed as `dependencies`, so pnpm installed a second module copy inside the profile. DSH locates the tool scheduler through a module-level symbol (`TOOL_RUNTIME_SCHEDULER = Symbol(...)`), and `Symbol()` has no shared identity across module copies, so `ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(...)` evaluated to `undefined` and threw `Cannot read properties of undefined (reading 'prepare')`. Following the official plugins' convention, all host packages now live in `peerDependencies` (and stay in `devDependencies` for local builds); `dependencies` keeps only `@deepseek-ai/schemastery` and `react`.
+- A **full DSH restart** is required after upgrading: previous versions already poisoned the running process's service instance, and uninstalling alone will not recover it.
+
 ## [3.2.2] - 2026-10-01
 
 ### Changed

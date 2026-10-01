@@ -8,9 +8,19 @@ importers:
 
   .:
     dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: ^3.18.4
+        version: 3.18.4
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+    devDependencies:
       '@deepseek-ai/cordis':
         specifier: ^4.0.2
         version: 4.0.2(@deepseek-ai/cordis-plugin-include@1.0.9)(@deepseek-ai/cordis-plugin-loader@1.0.5)
+      '@deepseek-ai/dsh-client-locale':
+        specifier: 0.2.0-rc.1
+        version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/dsh-client-store':
         specifier: ^0.2.0-rc.1
         version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
@@ -19,6 +29,9 @@ importers:
         version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/dsh-client-ui-primitives':
         specifier: ^0.2.0-rc.1
+        version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
+      '@deepseek-ai/dsh-client-ui-renderer':
+        specifier: 0.2.0-rc.1
         version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: ^0.2.0-rc.1
@@ -35,22 +48,9 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: ^0.2.0-rc.1
         version: 0.2.0-rc.1(42976d2be38dab6a93a6b22676eb5deb)
-      '@deepseek-ai/schemastery':
-        specifier: ^3.18.4
-        version: 3.18.4
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.31
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
-    devDependencies:
-      '@deepseek-ai/dsh-client-locale':
-        specifier: 0.2.0-rc.1
-        version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
-      '@deepseek-ai/dsh-client-ui-renderer':
-        specifier: 0.2.0-rc.1
-        version: 0.2.0-rc.1(@deepseek-ai/cordis@4.0.2)
       lightningcss:
         specifier: ^1.29.2
         version: 1.33.0
