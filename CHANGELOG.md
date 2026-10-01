@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1] - 2026-10-01
+
+### Fixed
+- `contract-test.mjs` 不再硬编码作者机器上的 profile 路径（`C:/Users/braindge/.dsh/profiles/web/...`），改为按优先级解析客户端 bundle：`DSH_CONVERSATION_LANGUAGE_CLIENT` 环境变量 → 本地构建产物 `lib/client.js` → DSH web profile 中的安装副本。断言逻辑完全未变，契约测试现在可在任意机器上复现。
+- 补记 `3.2.0` 的 CHANGELOG 条目（此前 tag/release 已发但 changelog 缺失）。
+
+---
+
+### Fixed
+- `contract-test.mjs` no longer hardcodes the author's profile path (`C:/Users/braindge/.dsh/profiles/web/...`). The client bundle is now resolved in priority order: `DSH_CONVERSATION_LANGUAGE_CLIENT` → locally built `lib/client.js` → installed copy in a DSH web profile. Assertions are unchanged; the contract test now runs on any machine.
+- Backfilled the missing `3.2.0` CHANGELOG entry.
+
+## [3.2.0] - 2026-09-29
+
+### Changed
+- 移除通用设置行（`settings.general.item`）；语言设置仅通过插件详情页入口提供，避免同一功能出现两个入口
+
+---
+
+### Changed
+- Removed the general-settings row (`settings.general.item`); the plugin detail page is now the single entry point for the language setting
+
 ## [3.1.0] - 2026-09-29
 
 ### Breaking

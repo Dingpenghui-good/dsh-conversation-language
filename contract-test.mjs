@@ -11,11 +11,33 @@
  *   - locale dictionary registration
  *   - setConversationLanguage writes through the config form
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const PROFILE_NPM = 'C:/Users/braindge/.dsh/profiles/web/node_modules'
-const clientPath = path.join(PROFILE_NPM, 'dsh-conversation-language', 'lib', 'client.js')
+const here = path.dirname(fileURLToPath(import.meta.url))
+
+// Resolve the client bundle portably, in priority order:
+//   1. explicit override (DSH_CONVERSATION_LANGUAGE_CLIENT)
+//   2. the locally built artifact — this is what gets published to npm
+//   3. an installed copy in a DSH web profile
+const clientCandidates = [
+  process.env.DSH_CONVERSATION_LANGUAGE_CLIENT,
+  path.join(here, 'lib', 'client.js'),
+  process.env.DSH_PROFILE_NPM
+    ? path.join(process.env.DSH_PROFILE_NPM, 'dsh-conversation-language', 'lib', 'client.js')
+    : undefined,
+  path.join(os.homedir(), '.dsh', 'profiles', 'web', 'node_modules', 'dsh-conversation-language', 'lib', 'client.js'),
+].filter(Boolean)
+
+const clientPath = clientCandidates.find((p) => existsSync(p))
+if (!clientPath) {
+  console.error('FAIL: client bundle not found; run `node build-and-verify.mjs` first. Tried:')
+  for (const p of clientCandidates) console.error('  - ' + p)
+  process.exit(1)
+}
+console.log('client bundle:', clientPath)
 const realClient = readFileSync(clientPath, 'utf8')
 
 let failures = 0
