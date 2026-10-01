@@ -7,6 +7,6 @@
 # (conversationLanguage: 'zh') materializes when the row ships no config.
 - insert:
     - id: tool-conversation-language
-      name: 'dsh-conversation-language'
+      name: '@dingpenghui/dsh-conversation-language'
       config:
         conversationLanguage: 'zh'

@@ -1,6 +1,6 @@
 {
-  "name": "dsh-conversation-language",
-  "version": "3.2.1",
+  "name": "@dingpenghui/dsh-conversation-language",
+  "version": "3.2.2",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
   "main": "./lib/index.js",
@@ -66,6 +66,9 @@
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "devDependencies": {

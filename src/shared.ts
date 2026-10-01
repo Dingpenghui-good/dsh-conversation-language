@@ -11,7 +11,7 @@ export const CONVERSATION_LANGUAGE_NAMESPACE = 'tool-conversation-language'
 export type ConversationLanguage = 'zh' | 'en'
 
 /** npm 包名：`plugins.bundle.config` slot 的 key。 */
-export const PLUGIN_PACKAGE_NAME = 'dsh-conversation-language'
+export const PLUGIN_PACKAGE_NAME = '@dingpenghui/dsh-conversation-language'
 
 /** `plugins.row.config` slot 的 key：`<package>#<row id>`。 */
 export const PLUGIN_ROW_CONFIG_KEY = `${PLUGIN_PACKAGE_NAME}#${CONVERSATION_LANGUAGE_NAMESPACE}`

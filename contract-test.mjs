@@ -26,9 +26,9 @@ const clientCandidates = [
   process.env.DSH_CONVERSATION_LANGUAGE_CLIENT,
   path.join(here, 'lib', 'client.js'),
   process.env.DSH_PROFILE_NPM
-    ? path.join(process.env.DSH_PROFILE_NPM, 'dsh-conversation-language', 'lib', 'client.js')
+    ? path.join(process.env.DSH_PROFILE_NPM, '@dingpenghui', 'dsh-conversation-language', 'lib', 'client.js')
     : undefined,
-  path.join(os.homedir(), '.dsh', 'profiles', 'web', 'node_modules', 'dsh-conversation-language', 'lib', 'client.js'),
+  path.join(os.homedir(), '.dsh', 'profiles', 'web', 'node_modules', '@dingpenghui', 'dsh-conversation-language', 'lib', 'client.js'),
 ].filter(Boolean)
 
 const clientPath = clientCandidates.find((p) => existsSync(p))
@@ -332,8 +332,8 @@ check('detail pages register after whileServed fires', () => {
   const rowCfg = slots.registered.filter((e) => e.name === 'plugins.row.config')
   assert(bundleCfg.length === 1, 'plugins.bundle.config missing')
   assert(rowCfg.length === 1, 'plugins.row.config missing')
-  assert(bundleCfg[0].key === 'dsh-conversation-language', 'bundle key mismatch: ' + bundleCfg[0].key)
-  assert(rowCfg[0].key === 'dsh-conversation-language#tool-conversation-language', 'row key mismatch: ' + rowCfg[0].key)
+  assert(bundleCfg[0].key === '@dingpenghui/dsh-conversation-language', 'bundle key mismatch: ' + bundleCfg[0].key)
+  assert(rowCfg[0].key === '@dingpenghui/dsh-conversation-language#tool-conversation-language', 'row key mismatch: ' + rowCfg[0].key)
 })
 
 check('row setConversationLanguage writes through the config form', () => {

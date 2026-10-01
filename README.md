@@ -37,13 +37,13 @@ git clone https://github.com/Dingpenghui-good/dsh-conversation-language.git ~/.d
 ```json
 {
   "dependencies": {
-    "dsh-conversation-language": "link:C:/Users/<你的用户名>/.dsh/plugins/dsh-conversation-language"
+    "@dingpenghui/dsh-conversation-language": "link:C:/Users/<你的用户名>/.dsh/plugins/dsh-conversation-language"
   },
   "dsh": {
     "profile": {
       "bundles": [
         // ... 其他 bundles
-        "dsh-conversation-language"
+        "@dingpenghui/dsh-conversation-language"
       ]
     }
   }
@@ -62,7 +62,7 @@ pnpm install
 
 ### 方式一：通过插件详情页
 
-重启 DSH 后，打开 **插件 → dsh-conversation-language**，在详情页的语言选择表单中切换并保存。
+重启 DSH 后，打开 **插件 → @dingpenghui/dsh-conversation-language**，在详情页的语言选择表单中切换并保存。
 
 ### 方式二：直接修改 profile patch
 

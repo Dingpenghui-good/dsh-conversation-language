@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.2] - 2026-10-01
+
+### Changed
+- 包名由 `dsh-conversation-language` 变更为 `@dingpenghui/dsh-conversation-language`，插件 id、`plugins.bundle.config` / `plugins.row.config` slot key、`cordis.patch.yml`、README 与契约测试断言同步更新。
+- 补充 `publishConfig.access = public`，确保 scoped 包以公开方式发布。
+
+---
+
+### Changed
+- Package renamed from `dsh-conversation-language` to `@dingpenghui/dsh-conversation-language`; the plugin id, `plugins.bundle.config` / `plugins.row.config` slot keys, `cordis.patch.yml`, README and contract-test assertions were updated accordingly.
+- Added `publishConfig.access = public` so the scoped package publishes publicly.
+
 ## [3.2.1] - 2026-10-01
 
 ### Fixed
