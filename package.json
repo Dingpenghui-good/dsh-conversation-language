@@ -1,6 +1,6 @@
 {
   "name": "@dingpenghui/dsh-conversation-language",
-  "version": "3.2.3",
+  "version": "3.2.4",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
   "main": "./lib/index.js",
@@ -39,6 +39,7 @@
     "src",
     "package.json",
     "README.md",
+    "RELEASE_NOTES_v3.2.4.md",
     "cordis.patch.yml"
   ],
   "exports": {
@@ -50,10 +51,7 @@
     "build": "tsdown",
     "dev": "tsdown --watch"
   },
-  "dependencies": {
-    "@deepseek-ai/schemastery": "^3.18.4",
-    "react": "^18.2.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
     "@deepseek-ai/dsh-client-store": "^0.2.0-rc.1",
@@ -64,7 +62,13 @@
     "@deepseek-ai/dsh-settings": "^0.2.0-rc.1",
     "@deepseek-ai/dsh-system-prompt": "^0.2.0-rc.1",
     "@deepseek-ai/dsh-tools": "^0.2.0-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.4",
+    "react": "^18.2.0",
     "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": { "optional": true },
+    "react": { "optional": true }
   },
   "publishConfig": {
     "access": "public"
