@@ -1,9 +1,12 @@
 {
   "name": "@dingpenghui/dsh-conversation-language",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "description": "DSH plugin for switching conversation language between Chinese and English",
   "type": "module",
   "main": "./lib/index.js",
+  "engines": {
+    "dsh": ">=0.2.0-rc.1 <0.3.0-0"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -39,7 +42,7 @@
     "src",
     "package.json",
     "README.md",
-    "RELEASE_NOTES_v3.2.4.md",
+    "RELEASE_NOTES_v3.2.5.md",
     "cordis.patch.yml"
   ],
   "exports": {
@@ -49,7 +52,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "prepublishOnly": "node engines-check.mjs"
   },
   "dependencies": {},
   "peerDependencies": {
