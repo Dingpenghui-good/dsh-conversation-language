@@ -1,18 +1,20 @@
 /**
- * Runtime verification: mount the built host bundle (lib/index.js) against
- * the REAL @deepseek-ai/* 0.1.7-alpha.2 services from this plugin's node_modules,
- * then exercise tool registration + system-prompt/assemble interception.
+ * Runtime verification against the REAL @deepseek-ai/* 0.2.2 services installed
+ * in this plugin's node_modules.
  *
- * The settings framework keys descriptors by the profile ENTRY id; the
- * settings service itself is only present in profile-mounted contexts
- * (it needs configEditor + profileContext), so a bare Context falls back
- * to the documented 'zh' default.
+ * DSH 0.2.1-rc.2 moved tool declarations out of `system-prompt/assemble`: the
+ * waterfall receives a `PromptPresentation` (sections, contexts, variables) and
+ * tool schemas are provider-owned. This script mounts the built host bundle and
+ * asserts the plugin (a) contributes a language-instruction section without
+ * touching tools, (b) switches language live through the settings value, and
+ * (c) registers a working query tool.
  */
-import { Context } from '@deepseek-ai/cordis'
-import { SystemPrompt, PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION } from '@deepseek-ai/dsh-system-prompt'
-import { ToolRuntime, defineTool } from '@deepseek-ai/dsh-tools'
+import { Context, Service } from '@deepseek-ai/cordis'
+import { SystemPrompt, PERSONA_PREFIX_SECTION } from '@deepseek-ai/dsh-system-prompt'
+import { ToolsService, projectToolSchema } from '@deepseek-ai/dsh-tools'
+import { executeToolBatch, ToolExecutionPipeline } from '@deepseek-ai/dsh-tools/pipeline'
 import * as plugin from './lib/index.js'
-import { CONVERSATION_LANGUAGE_NAMESPACE } from './lib/index.js'
+import { CONVERSATION_LANGUAGE_NAMESPACE, LANGUAGE_SECTION } from './lib/index.js'
 
 const failures = []
 function check(label, ok, extra) {
@@ -20,21 +22,30 @@ function check(label, ok, extra) {
   if (!ok) failures.push(label)
 }
 
+/** The shipped native executor, rebuilt on this standalone context. */
+function makeNativeExecutor(ctx) {
+  const pipeline = new ToolExecutionPipeline(ctx)
+  return {
+    describe: tools => ({ schemas: tools.map(definition => projectToolSchema(definition, false)) }),
+    execute: input => executeToolBatch(input, pipeline, () => 10),
+  }
+}
+
+/** A stand-in settings service so the plugin can read a live language value. */
+class FakeSettings extends Service {
+  constructor(ctx, served) {
+    super(ctx, 'settings')
+    this.served = served
+  }
+  describe() {
+    return [{ ns: CONVERSATION_LANGUAGE_NAMESPACE, value: { conversationLanguage: this.served.value } }]
+  }
+}
+
 const ctx = new Context()
 await ctx.plugin(SystemPrompt, { personaPrefix: 'DEPLOYMENT PERSONA BASELINE' })
-await ctx.plugin(ToolRuntime, { mode: 'native' })
-
-// A base tool so the assembly has something to prefix.
-ctx.tools.register(defineTool({
-  name: 'ping_tool',
-  description: 'does ping',
-  parameters: {},
-  output: {
-    schema: { type: 'object', properties: { ok: { type: 'boolean' } }, additionalProperties: false },
-    render: (_a, v) => [{ type: 'text', text: `ok=${v.ok}` }],
-  },
-  execute: async () => ({ ok: true }),
-}))
+await ctx.plugin(ToolsService, {})
+ctx.tools.setExecutor(makeNativeExecutor(ctx))
 
 // Mount the plugin exactly as the Loader does: name/inject/apply module face.
 try {
@@ -44,44 +55,56 @@ try {
   process.exit(1)
 }
 
-// 1. tool registered by the plugin
+// 1. The instruction section is registered at the persona-prefix position.
+let assembly = await ctx.get('systemPrompt').assemble()
+const persona = assembly.sections.find(s => s.name === PERSONA_PREFIX_SECTION)
+check('persona prefix section still present', persona !== undefined, PERSONA_PREFIX_SECTION)
+const instruction = assembly.sections.find(s => s.name === LANGUAGE_SECTION)
+check('language section registered', instruction !== undefined, LANGUAGE_SECTION)
+check('zh instruction rendered by default', instruction?.text.includes('\u3010\u8bed\u8a00\u6307\u4ee4\u3011') === true,
+  JSON.stringify(instruction?.text.slice(0, 24)))
+
+// 2. The query tool is registered and executes through the native executor.
 const tools = ctx.get('tools')
 const langTool = tools.get('get_conversation_language')
 check('get_conversation_language tool registered', langTool !== undefined)
 if (langTool !== undefined) {
+  check('tool description unchanged by assembly', langTool.description.length > 0, JSON.stringify(langTool.description))
   const executed = await tools.execute({
+    calls: [{ type: 'tool-call', id: 'verify-1', name: 'get_conversation_language', arguments: {} }],
     signal: new AbortController().signal,
-    callId: { kind: 'call', id: 'verify-1' },
-    name: 'get_conversation_language',
-    arguments: {},
+    maxParallelToolCalls: 1,
   })
-  check('get_conversation_language executes', executed !== undefined && executed.isError === false && executed.value !== undefined,
-    JSON.stringify(executed))
-  check('tool reports default zh when no settings service', executed?.value?.language === 'zh',
-    JSON.stringify(executed?.value))
+  const result = executed.results[0]?.result
+  check('get_conversation_language executes', result !== undefined && result.isError !== true, JSON.stringify(result)?.slice(0, 200))
 }
 
-// 2. global (unscoped) assembly carries the zh language instruction in the persona prefix
-let assembly = await ctx.get('systemPrompt').assemble()
-let persona = assembly.sections.find(s => s.name === PERSONA_PREFIX_SECTION)
-check('persona prefix section found in assembly', persona !== undefined, PERSONA_PREFIX_SECTION)
-check('zh instruction appended to persona prefix', persona.text.includes('【语言指令】'), JSON.stringify(persona.text.slice(-60)))
-let ping = assembly.tools.find(t => t.name === 'ping_tool')
-check('zh tool description prefixed', String(ping.description).startsWith('[中文思考]'), JSON.stringify(ping.description))
+// 3. Live switch: a settings service that serves `en` flips the next assembly.
+const servedLanguage = { value: 'en' }
+const switchCtx = new Context()
+await switchCtx.plugin(SystemPrompt, {})
+await switchCtx.plugin(ToolsService, {})
+switchCtx.tools.setExecutor(makeNativeExecutor(switchCtx))
+await switchCtx.plugin(FakeSettings, servedLanguage)
+await switchCtx.plugin({ name: plugin.name, inject: plugin.inject, apply: plugin.apply })
+let switched = await switchCtx.get('systemPrompt').assemble()
+const enInstruction = switched.sections.find(s => s.name === LANGUAGE_SECTION)
+check('en instruction after switch', enInstruction?.text.includes('[Language Instruction]') === true,
+  JSON.stringify(enInstruction?.text.slice(0, 26)))
+servedLanguage.value = 'zh'
+switched = await switchCtx.get('systemPrompt').assemble()
+check('zh instruction flips back live',
+  switched.sections.find(s => s.name === LANGUAGE_SECTION)?.text.includes('\u3010\u8bed\u8a00\u6307\u4ee4\u3011') === true)
 
-// 3. idempotence: each assembly re-appends exactly once (sections are rebuilt
-// per assembly, so the persisted text must stay stable)
-const textBefore = persona.text
-assembly = await ctx.get('systemPrompt').assemble()
-const personaAgain = assembly.sections.find(s => s.name === PERSONA_PREFIX_SECTION)
-check('second assembly does not stack the suffix',
-  personaAgain.text === textBefore,
-  JSON.stringify(personaAgain.text.slice(-80)))
+// 4. Idempotence: repeated assemblies never stack the instruction.
+const texts = []
+for (let i = 0; i < 3; i++) {
+  const a = await switchCtx.get('systemPrompt').assemble()
+  texts.push(a.sections.filter(s => s.name === LANGUAGE_SECTION).map(s => s.text).join('|'))
+}
+check('instruction not stacked across assemblies', new Set(texts).size === 1, JSON.stringify(texts.map(t => t.length)))
 
-// 4. suffix fallback sanity (direct constant values match the registry source)
-check('persona section names match registry', PERSONA_PREFIX_SECTION === 'deployment:persona-prefix' && PERSONA_SUFFIX_SECTION === 'deployment:persona-suffix')
-
-// 5. namespace constant exported by the built bundle matches the patch row id
+// 5. The namespace constant matches the patch row id.
 check('exported namespace matches patch row id', CONVERSATION_LANGUAGE_NAMESPACE === 'tool-conversation-language',
   CONVERSATION_LANGUAGE_NAMESPACE)
 

@@ -6,8 +6,8 @@
  * 背景：DSH（`@deepseek-ai/dsh-app-boot` 的 `unmetRequirements`）在插件清单里
  * 没有 `engines.dsh` 时会退回检查 `@deepseek-ai/dsh-*` 的 `peerDependencies`，
  * 判定式为 `semver.satisfies(runtime, range, { includePrerelease: true })`。
- * 那个分支很容易踩坑——例如把 peer 钉成精确版本 `0.2.0-rc.2` 后，运行时
- * `0.2.1-rc.2` 并不满足它，安装会被直接拒绝。声明 `engines.dsh` 后，
+ * 那个分支很容易踩坑——例如把 peer 钉成精确版本 `0.2.2-rc.2` 后，运行时
+ * `0.2.2-rc.3` 并不满足它，安装会被直接拒绝。声明 `engines.dsh` 后，
  * 兼容范围由它**单独**决定，判定清晰且不会被 peer 的意外改动影响。
  *
  * 无外部依赖：内置一个够用的 semver 区间比较器，避免检查脚本本身需要装包。
@@ -83,8 +83,8 @@ assert.ok(
   'engines.dsh must exclude 0.3.x, whose contract this package has not been verified against',
 )
 
-// 3) 必须放行实际验证过的运行时
-for (const runtime of ['0.2.0-rc.2', '0.2.1-rc.2']) {
+// 3) 必须放行实际验证过的运行时（0.2.2 起 system-prompt/assemble 不再携带 tools）
+for (const runtime of ['0.2.2-rc.1', '0.2.2-rc.3', '0.2.2']) {
   assert.ok(
     satisfies(runtime, range),
     `engines.dsh must admit dsh ${runtime}, which this package is built and verified against`,
@@ -92,7 +92,7 @@ for (const runtime of ['0.2.0-rc.2', '0.2.1-rc.2']) {
 }
 
 // 4) 必须拒绝契约未验证的版本线
-for (const runtime of ['0.3.0']) {
+for (const runtime of ['0.3.0', '0.1.7', '0.2.0-rc.1']) {
   assert.ok(
     !satisfies(runtime, range),
     `engines.dsh must reject dsh ${runtime}`,

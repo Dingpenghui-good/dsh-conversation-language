@@ -1,34 +1,37 @@
 /**
  * Conversation Language Switcher Plugin for DeepSeek Harness
  *
- * Provides a setting in General Settings to switch conversation language
- * between Chinese and English. Uses closed-over state + waterfall interception
- * to maximize language consistency across all scenarios (simple Q&A, tool calls,
- * skill analysis, etc.).
+ * Switches the conversation language between Chinese and English. The language
+ * instruction is contributed as its own system-prompt section (evaluated on
+ * every assembly, so a switch applies to the next model step without a
+ * restart) and the current value is exposed through a small Tool.
  *
- * Install: dsh plugin --profile web add <path-to-plugin>
- *
- * Architecture (DSH 0.1.7-alpha.2+):
+ * Architecture (DSH 0.2.2+):
  * - Host half declares a `Config` schema with a volatile `conversationLanguage`
  *   field; the settings framework projects it to the browser and persists it
  *   through the active profile's Cordis patch.
- * - The `system-prompt/assemble` waterfall reads the live settings value on
- *   every assembly, so language switches take effect without a restart.
+ * - `ctx.systemPrompt.section()` registers the instruction; its `text` callback
+ *   reads the live settings value per assembly.
+ * - DSH 0.2.1-rc.2 moved tool declarations out of `system-prompt/assemble`
+ *   (`PromptPresentation` carries only sections, contexts, and variables), so
+ *   this plugin no longer edits tool schemas: the instruction itself covers
+ *   every user-visible string, including tool-call argument values.
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import type { AssembleContext, PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
-import { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION } from '@deepseek-ai/dsh-system-prompt'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-// Ensure module augmentation for systemPrompt service and system-prompt/assemble event is visible
-import type {} from '@deepseek-ai/dsh-system-prompt'
-// Pull the SettingsForms Context merge (ctx.settings) into this program.
+// Type-only: pulls the ctx.settings Context merge and the settings descriptors.
 import type {} from '@deepseek-ai/dsh-settings'
+// Type-only: pulls the ctx.systemPrompt service merge.
+import type {} from '@deepseek-ai/dsh-system-prompt'
 import { CONVERSATION_LANGUAGE_NAMESPACE, type ConversationLanguage } from './shared.ts'
 
 export { CONVERSATION_LANGUAGE_NAMESPACE }
 export type { ConversationLanguage }
+
+/** Name of the system-prompt section this plugin contributes. */
+export const LANGUAGE_SECTION = 'conversation-language:instruction'
 
 /** Plugin config: the language the conversation runs in. */
 export interface Config {
@@ -44,21 +47,17 @@ export const Config = z.object({
   conversationLanguage: z.union([z.const('zh'), z.const('en')]).volatile().default('zh'),
 })
 
-// Persona templates — append language instruction to whatever preset persona
-// the current session uses. The base persona is detected from the assembly at
-// runtime; we only inject the language section.
-const LANGUAGE_SUFFIX_ZH = `
-
-【语言指令】
+// Persona templates — the instruction spells out the language of every
+// user-visible string, including tool-call argument values, because DSH 0.2.2
+// no longer lets a plugin rewrite tool schemas during assembly.
+const LANGUAGE_INSTRUCTION_ZH = `【语言指令】
 当前对话语言为「中文」。你必须：
 1. 所有思考过程使用中文
 2. 所有回复内容使用中文
 3. 所有面向用户可见的文本都必须使用中文，包括工具调用的参数值：pwsh/bash 的 description、todo_write 的 content、subagent 的 description、任务与作业的名称等，都要用中文书写；不要沿用工具 schema 里的英文示例措辞（例如 "List files in current directory"）
 4. 如果思考中使用了英文，立即纠正回中文`
 
-const LANGUAGE_SUFFIX_EN = `
-
-[Language Instruction]
+const LANGUAGE_INSTRUCTION_EN = `[Language Instruction]
 The current conversation language is "English". You MUST:
 1. Use English for all thinking processes
 2. Use English for all response content
@@ -69,9 +68,8 @@ export const name = 'conversation-language'
 export const inject = ['systemPrompt', 'tools'] as const
 
 /**
- * Register the tool and the `system-prompt/assemble` waterfall interception.
- * The language is read from the settings framework on every assembly so a
- * switch takes effect on the very next model step without a remount.
+ * Register the language-instruction section and the settings query tool.
+ *
  * @param ctx - the plugin context carrying the settings, systemPrompt, and tools services.
  */
 export function apply(ctx: Context): void {
@@ -85,37 +83,18 @@ export function apply(ctx: Context): void {
     return value?.conversationLanguage ?? 'zh'
   }
 
-  // 使用 system-prompt/assemble waterfall 拦截
-  // 动态读取当前 preset 的 persona，追加语言部分
-  ctx.on('system-prompt/assemble', async (assembly: PromptAssembly, context: AssembleContext, next: () => Promise<PromptAssembly>) => {
-    const lang = getLanguage()
+  // The section callback runs for every assembly, so the text always reflects
+  // the value the settings framework currently serves.
+  ctx.effect(() => ctx.systemPrompt.section({
+    name: LANGUAGE_SECTION,
+    // Right after the deployment persona prefix (order 0): the instruction reads
+    // as a persona-level directive rather than trailing guidance.
+    order: ctx.systemPrompt.getSectionOrder('DEPLOYMENT_PERSONA_PREFIX') + 1,
+    text: () => (getLanguage() === 'en' ? LANGUAGE_INSTRUCTION_EN : LANGUAGE_INSTRUCTION_ZH),
+  }), 'conversation-language: instruction section')
 
-    // 查找当前 preset 的 persona section
-    // DSH 0.1.5+ 将 persona 拆分为 prefix（order 0，preset 影子）与 suffix
-    // （order 10200）两个 section；优先追加到 prefix（与原 0.1.2 的
-    // 'deployment:persona' 位置一致），prefix 缺失时回退到 suffix。
-    const personaSection =
-      assembly.sections.find(s => s.name === PERSONA_PREFIX_SECTION)
-      ?? assembly.sections.find(s => s.name === PERSONA_SUFFIX_SECTION)
-    if (personaSection) {
-      // 在 persona 末尾追加语言指令
-      personaSection.text += lang === 'en' ? LANGUAGE_SUFFIX_EN : LANGUAGE_SUFFIX_ZH
-    }
-
-    // 向 tool schemas 添加语言前缀
-    for (const tool of assembly.tools) {
-      if (lang === 'zh' && !String(tool.description).startsWith('[中文思考]')) {
-        tool.description = `[中文思考] ${tool.description}`
-      } else if (lang === 'en' && !String(tool.description).startsWith('[English Thinking]')) {
-        tool.description = `[English Thinking] ${tool.description}`
-      }
-    }
-
-    return next()
-  })
-
-  // Register tool to query the current language
-  ctx.tools.register(defineTool({
+  // Register the tool that reports the current language.
+  ctx.effect(() => ctx.tools.register(defineTool({
     name: 'get_conversation_language',
     description: '获取当前对话语言设置',
     parameters: {},
@@ -140,5 +119,5 @@ export function apply(ctx: Context): void {
         label: lang === 'zh' ? '中文' : 'English',
       }
     },
-  }))
+  })), 'conversation-language: query tool')
 }

@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-11-14
+
+### Fixed
+- **在 DSH 0.2.2 上每轮对话都崩在 `assembly.tools is not iterable`**：0.2.1-rc.2 起
+  `system-prompt/assemble` waterfall 只接收 `PromptPresentation`（`sections` /
+  `contexts` / `variables`），工具声明改由 step 准入的 provider 拥有，waterfall 返回的
+  `tools` 被忽略。插件原先在 waterfall 里遍历 `assembly.tools` 给工具描述加语言前缀，
+  于是 `for…of undefined` 抛 `TypeError` 并从瀑布冒泡，整个模型步骤失败——插件装得上，
+  但整机不可用。现改为注册独立 prompt section（`ctx.systemPrompt.section()`，`text`
+  按装配求值），彻底移除对 `assembly.tools` 的读写。
+
+### Changed
+- 语言指令的注入方式从「改写 persona section 文本 + 改写工具 schema」改为
+  「注册独立 section `conversation-language:instruction`，order = persona-prefix + 1」；
+  切换语言依然即时生效，因为 section 的 `text` 回调每次装配都会重新读取 settings。
+- `engines.dsh`：`>=0.2.0-rc.1 <0.3.0-0` → `>=0.2.2-rc.1 <0.3.0-0`。0.2.0 / 0.2.1 的
+  `assemble` 契约与 0.2.2 不兼容，同一份代码无法兼顾；继续放行只会把崩溃留给运行时。
+- peer 区间：`@deepseek-ai/cordis` `^4.0.2` → `^4.1.0`；`@deepseek-ai/dsh-*` `^0.2.0-rc.1`
+  → `^0.2.2-rc.1`；`@deepseek-ai/schemastery` `^3.18.4` → `^3.19.0`；devDependencies
+  升到 `0.2.2-rc.3`。
+- `dsh.client.inject` 收敛为真实存在的动态包行（locale / ui-renderer / ui-settings /
+  ui-plugin-manager）。`ui-primitives`、`ui-slots`、`client-store` 在 0.2.2 是 Web shell 的
+  静态平台模块，不是可加载的 Loader 行，列进 inject 属于无效声明。
+- `runtime-verify.mjs` 重写为针对 0.2.2 真实服务（`SystemPrompt` + `ToolsService` +
+  native executor）的回归：section 位置、默认中文、工具执行、`en`/`zh` 实时切换、
+  重复装配不叠加。
+
+---
+
+### Fixed
+- **Every model step crashed on DSH 0.2.2 with `assembly.tools is not iterable`**: since
+  0.2.1-rc.2 the `system-prompt/assemble` waterfall receives only a
+  `PromptPresentation` (`sections` / `contexts` / `variables`); tool declarations are
+  owned by step-admitted providers and a returned `tools` field is ignored. The plugin
+  iterated `assembly.tools` to prefix tool descriptions, so `for…of undefined` threw a
+  `TypeError` that escaped the waterfall and failed the whole step — it installed fine
+  but left the app unusable. The instruction is now its own registered prompt section
+  (`ctx.systemPrompt.section()`, text evaluated per assembly), and the plugin no longer
+  reads or writes `assembly.tools`.
+
+### Changed
+- Language injection moved from "rewrite the persona section text + prefix tool schemas"
+  to "register a dedicated section `conversation-language:instruction` at persona-prefix
+  order + 1". Switching stays immediate because the section's `text` callback re-reads
+  settings on every assembly.
+- `engines.dsh`: `>=0.2.0-rc.1 <0.3.0-0` → `>=0.2.2-rc.1 <0.3.0-0`. The 0.2.0 / 0.2.1
+  `assemble` contract differs from 0.2.2, so one build cannot serve both; admitting them
+  would only defer the crash to runtime.
+- Peer ranges: `@deepseek-ai/cordis` `^4.0.2` → `^4.1.0`; `@deepseek-ai/dsh-*`
+  `^0.2.0-rc.1` → `^0.2.2-rc.1`; `@deepseek-ai/schemastery` `^3.18.4` → `^3.19.0`;
+  devDependencies bumped to `0.2.2-rc.3`.
+- `dsh.client.inject` narrowed to real dynamic package rows (locale / ui-renderer /
+  ui-settings / ui-plugin-manager). In 0.2.2 `ui-primitives`, `ui-slots`, and
+  `client-store` are static platform modules of the Web shell, not loadable Loader rows.
+- `runtime-verify.mjs` rewritten against the real 0.2.2 services (`SystemPrompt` +
+  `ToolsService` + the native executor): section placement, default Chinese, tool
+  execution, live `en`/`zh` switching, no stacking across assemblies.
+
 ## [3.2.3] - 2026-10-01
 
 ### Fixed
